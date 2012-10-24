@@ -6,6 +6,16 @@ lib-cov
 *.out
 *.pid
 *.gz
+*.o
+*.so
+*.lo
+*.slo
+*.dlyb
+*.lai
+*.la
+*.a
+
+build
 
 pids
 logs
