@@ -8,6 +8,8 @@
 using namespace v8;
 using namespace node;
 
+static Persistent<FunctionTemplate> constructor;
+
 void Leveled::Initialize(Handle<Object> target) {
   HandleScope scope;
 
@@ -15,7 +17,7 @@ void Leveled::Initialize(Handle<Object> target) {
   tpl->InstanceTemplate()->SetInternalFieldCount(1);
   tpl->SetClassName(String::NewSymbol("Leveled"));
 
-  //sft = Persistent<FunctionTemplate>::New(tpl);
+  //constructor = Persistent<FunctionTemplate>::New(tpl);
   //sft->InstanceTemplate()->SetInternalFieldCount(1);
   //sft->SetClassName(String::NewSymbol("Leveled"));
 
@@ -28,30 +30,46 @@ void Leveled::Initialize(Handle<Object> target) {
 Handle<Value> Leveled::New(const Arguments& args) {
   HandleScope scope;
 
-  Leveled *wrapper = new Leveled();
-  //Leveled *wrapper = new Leveled(args[0]);
+  if (args.Length() < 1 || !args[0]->IsString()) {
+    return ThrowException(Exception::Error(String::New("DB path required")));
+  }
+  String::Utf8Value name(args[0]);
+
+  Leveled *wrapper = new Leveled(*name);
   wrapper->Wrap(args.Holder());
   return scope.Close(args.Holder());
 }
 
 Handle<Value> Leveled::Get(const Arguments& args) {
-  return args.This();
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
+
+  String::Utf8Value key(args[0]->ToString());
+
+  std::string value;
+  self->db->Get(leveldb::ReadOptions(), *key, &value);
+
+  return scope.Close(String::New(value.data()));
 }
 
 Handle<Value> Leveled::Set(const Arguments& args) {
-  return args.This();
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
+
+  String::Utf8Value key(args[0]->ToString());
+  String::Utf8Value val(args[1]->ToString());
+
+  self->db->Put(leveldb::WriteOptions(), *key, *val);
+
+  return scope.Close(args.This());
 }
 
-Leveled::Leveled() {
+Leveled::Leveled(char* path) {
   HandleScope scope;
 
-  /*if (args.Length() < 1) {
-    return ThrowException(Exception::Error(String::New("DB path required")));
-    }*/
-
   leveldb::Options options;
-  //options.create_if_missing = true;
-  //leveldb::Status status = leveldb::DB::Open(options, "/tmp/foo", &db);
+  options.create_if_missing = true;
+  leveldb::Status status = leveldb::DB::Open(options, path, &db);
 }
 
 Leveled::~Leveled() {
