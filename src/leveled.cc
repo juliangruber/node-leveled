@@ -1,46 +1,67 @@
 #include <node.h>
 #include <v8.h>
+#include <leveldb/db.h>
+#include <leveldb/write_batch.h>
+
+#include "leveled.h"
 
 using namespace v8;
+using namespace node;
 
-Handle<Value> DB (const Arguments& args) {
+void Leveled::Initialize(Handle<Object> target) {
   HandleScope scope;
 
-  if (args.Length() < 1) {
-    ThrowException(Exception::TypeError(String::New("DB path required")));
-    return scope.Close(Undefined());
+  Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
+  tpl->InstanceTemplate()->SetInternalFieldCount(1);
+  tpl->SetClassName(String::NewSymbol("Leveled"));
+
+  //sft = Persistent<FunctionTemplate>::New(tpl);
+  //sft->InstanceTemplate()->SetInternalFieldCount(1);
+  //sft->SetClassName(String::NewSymbol("Leveled"));
+
+  NODE_SET_PROTOTYPE_METHOD(tpl, "get", Get);
+  NODE_SET_PROTOTYPE_METHOD(tpl, "set", Set);
+
+  target->Set(String::NewSymbol("Db"), tpl->GetFunction());
+}
+
+Handle<Value> Leveled::New(const Arguments& args) {
+  HandleScope scope;
+
+  Leveled *wrapper = new Leveled();
+  //Leveled *wrapper = new Leveled(args[0]);
+  wrapper->Wrap(args.Holder());
+  return scope.Close(args.Holder());
+}
+
+Handle<Value> Leveled::Get(const Arguments& args) {
+  return args.This();
+}
+
+Handle<Value> Leveled::Set(const Arguments& args) {
+  return args.This();
+}
+
+Leveled::Leveled() {
+  HandleScope scope;
+
+  /*if (args.Length() < 1) {
+    return ThrowException(Exception::Error(String::New("DB path required")));
+    }*/
+
+  leveldb::Options options;
+  //options.create_if_missing = true;
+  //leveldb::Status status = leveldb::DB::Open(options, "/tmp/foo", &db);
+}
+
+Leveled::~Leveled() {
+  if (db != NULL) {
+    delete db;
+    db = NULL;
   }
-
-  return scope.Close(args.This());
 }
 
-Handle<Value> get (const Arguments &args) {
-  HandleScope scope;
-
-  //Local<String> key = args[0];
-  Local<Function> cb = Local<Function>::Cast(args[1]);
-  const unsigned argc = 1;
-  Local<Value> argv[argc] = { Local<Value>::New(String::New("ha!")) };
-  cb->Call(Context::GetCurrent()->Global(), argc, argv);
-
-  return scope.Close(args.This());
+extern "C" void init(Handle<Object> target) {
+  Leveled::Initialize(target);
 }
-
-void init (Handle<Object> target) {
-  HandleScope scope;
-
-  Handle<FunctionTemplate> dbTpl = FunctionTemplate::New(DB);
-
-  //Handle<ObjectTemplate> instance = dbTpl->InstanceTemplate();
-
-  NODE_SET_PROTOTYPE_METHOD(dbTpl, "get", get);
-  //NODE_SET_PROTOTYPE_METHOD(dbTpl, "set", set);
-
-  //NODE_SET_METHOD(target, "leveled", dbTpl);
-  target->Set(
-    String::NewSymbol("leveled"),
-    dbTpl->GetFunction()    
-  );
-}
-
-NODE_MODULE(leveled, init)
+NODE_MODULE(leveled, init);
