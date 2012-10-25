@@ -8,23 +8,23 @@
 using namespace v8;
 using namespace node;
 
-static Persistent<FunctionTemplate> constructor;
+Persistent<FunctionTemplate> Leveled::constructor;
 
 void Leveled::Initialize(Handle<Object> target) {
   HandleScope scope;
 
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-  tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  tpl->SetClassName(String::NewSymbol("Leveled"));
+  //tpl->InstanceTemplate()->SetInternalFieldCount(1);
+  //tpl->SetClassName(String::NewSymbol("Leveled"));
 
-  //constructor = Persistent<FunctionTemplate>::New(tpl);
-  //sft->InstanceTemplate()->SetInternalFieldCount(1);
-  //sft->SetClassName(String::NewSymbol("Leveled"));
+  constructor = Persistent<FunctionTemplate>::New(tpl);
+  constructor->InstanceTemplate()->SetInternalFieldCount(1);
+  constructor->SetClassName(String::NewSymbol("Leveled"));
 
-  NODE_SET_PROTOTYPE_METHOD(tpl, "get", Get);
-  NODE_SET_PROTOTYPE_METHOD(tpl, "set", Set);
+  NODE_SET_PROTOTYPE_METHOD(constructor, "get", Get);
+  NODE_SET_PROTOTYPE_METHOD(constructor, "set", Set);
 
-  target->Set(String::NewSymbol("Db"), tpl->GetFunction());
+  target->Set(String::NewSymbol("Db"), constructor->GetFunction());
 }
 
 Handle<Value> Leveled::New(const Arguments& args) {
