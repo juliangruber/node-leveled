@@ -14,8 +14,6 @@ void Leveled::Initialize(Handle<Object> target) {
   HandleScope scope;
 
   Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-  //tpl->InstanceTemplate()->SetInternalFieldCount(1);
-  //tpl->SetClassName(String::NewSymbol("Leveled"));
 
   constructor = Persistent<FunctionTemplate>::New(tpl);
   constructor->InstanceTemplate()->SetInternalFieldCount(1);
@@ -45,11 +43,16 @@ Handle<Value> Leveled::Get(const Arguments& args) {
   Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
 
   String::Utf8Value key(args[0]->ToString());
+  Local<Function> cb = Local<Function>::Cast(args[1]);
+  const unsigned argc = 1;
 
   std::string value;
   self->db->Get(leveldb::ReadOptions(), *key, &value);
 
-  return scope.Close(String::New(value.data()));
+  Local<Value> argv[argc] = { Local<Value>::New(String::New(value.data())) };
+  cb->Call(Context::GetCurrent()->Global(), argc, argv);
+
+  return scope.Close(Undefined());
 }
 
 Handle<Value> Leveled::Set(const Arguments& args) {
