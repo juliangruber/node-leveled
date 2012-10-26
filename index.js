@@ -29,7 +29,7 @@ console.log([
   Math.floor(1000/duration * toWrite * batches) +' w/s)'
 ].join(''));
 
-leveled.get(0, function (val) {
+leveled.get(0, function (err, val) {
   console.log(val);
 });
 

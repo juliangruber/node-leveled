@@ -44,12 +44,12 @@ Handle<Value> Leveled::Get(const Arguments& args) {
 
   String::Utf8Value key(args[0]->ToString());
   Local<Function> cb = Local<Function>::Cast(args[1]);
-  const unsigned argc = 1;
+  const unsigned argc = 2;
 
   std::string value;
   self->db->Get(leveldb::ReadOptions(), *key, &value);
 
-  Local<Value> argv[argc] = { Local<Value>::New(String::New(value.data())) };
+  Local<Value> argv[argc] = { Local<Value>::New(Undefined()), Local<Value>::New(String::New(value.data())) };
   cb->Call(Context::GetCurrent()->Global(), argc, argv);
 
   return scope.Close(Undefined());
