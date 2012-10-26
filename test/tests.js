@@ -54,8 +54,8 @@ describe('leveled', function() {
     it('should get a value', function(done) {
       leveled.putSync('key', 'value');
       leveled.get('key', function (err, value) {
-        console.log(arguments);
-        //value.should.equal('value');
+        if (err) throw err;
+        value.should.equal('value');
         done();
       })
     })

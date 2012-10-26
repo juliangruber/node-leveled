@@ -16,16 +16,34 @@ public:
   static Persistent<FunctionTemplate> constructor;
   static Handle<Value> New(const Arguments &args);
 
+  static Handle<Value> GetSync(const Arguments &args);
   static Handle<Value> Get(const Arguments &args);
   static void GetDoing(uv_work_t *req);
   static void GetAfter(uv_work_t *req);
 
-  static Handle<Value> GetSync(const Arguments &args);
-  static Handle<Value> Put(const Arguments &args);
   static Handle<Value> PutSync(const Arguments &args);
+  static Handle<Value> Put(const Arguments &args);
+  static void PutDoing(uv_work_t *req);
+  static void PutAfter(uv_work_t *req);
 
 private:
   leveldb::DB *db;
+};
+
+struct GetParams {
+  Leveled* self;
+  std::string key; 
+  Persistent<Function> cb;
+  leveldb::Status status;
+  std::string rtn;
+};
+
+struct PutParams {
+  Leveled* self;
+  std::string key; 
+  std::string val; 
+  Persistent<Function> cb;
+  leveldb::Status status;
 };
 
 #endif
