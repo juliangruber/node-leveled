@@ -20,7 +20,7 @@ void Leveled::Initialize(Handle<Object> target) {
   constructor->SetClassName(String::NewSymbol("Leveled"));
 
   NODE_SET_PROTOTYPE_METHOD(constructor, "get", Get);
-  NODE_SET_PROTOTYPE_METHOD(constructor, "set", Set);
+  NODE_SET_PROTOTYPE_METHOD(constructor, "put", Put);
 
   target->Set(String::NewSymbol("Db"), constructor->GetFunction());
 }
@@ -55,7 +55,7 @@ Handle<Value> Leveled::Get(const Arguments& args) {
   return scope.Close(Undefined());
 }
 
-Handle<Value> Leveled::Set(const Arguments& args) {
+Handle<Value> Leveled::Put(const Arguments& args) {
   HandleScope scope;
   Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
 

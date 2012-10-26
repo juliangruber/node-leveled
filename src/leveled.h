@@ -17,7 +17,7 @@ public:
   static Handle<Value> New(const Arguments &args);
 
   static Handle<Value> Get(const Arguments &args);
-  static Handle<Value> Set(const Arguments &args);
+  static Handle<Value> Put(const Arguments &args);
 
 private:
   leveldb::DB *db;
