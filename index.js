@@ -1,32 +1,24 @@
 var binding = require('./build/Release/leveled');
 
-var Leveled = function(path) {
+module.exports = Leveled;
+
+function Leveled(path) {
+  if (!(this instanceof Leveled)) return new Leveled(path)
   this.db = new binding.Db(path)
 }
 
 Leveled.prototype.get = function (key, cb) {
-  return this.db.get(key, cb)
+  return this.db.get.apply(this.db, arguments)
+}
+
+Leveled.prototype.getSync = function (key, cb) {
+  return this.db.getSync.apply(this.db, arguments)
 }
 
 Leveled.prototype.put = function (key, val, cb) {
-  return this.db.put(key, val, cb)
+  return this.db.put.apply(this.db, arguments)
 }
 
-// -----------------------------------------
-
-var leveled = new Leveled("/tmp/foo");
-
-var start = Date.now();
-var toWrite = 120000;
-var batches = 1;
-
-for (var i = 0, len = toWrite * batches; i < len; i++) {
-  leveled.put(i+'', '1337,1337,1337,1337,1337');
+Leveled.prototype.putSync = function (key, val, cb) {
+  return this.db.putSync.apply(this.db, arguments)
 }
-var duration = Date.now()-start;
-console.log([
-  toWrite * batches, ' records written in ', duration, 'ms (',
-  Math.floor(1000/duration * toWrite * batches) +' w/s)'
-].join(''));
-
-leveled.get('foo')

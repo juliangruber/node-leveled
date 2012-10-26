@@ -3,6 +3,8 @@
 
 LevelDB
 
+The stored data must always be in String format (or possibly a Buffer?)
+
 ## Usage
 
 ```javascript
