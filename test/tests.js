@@ -1,5 +1,6 @@
 var should = require('should');
 var Leveled = require('../');
+var binding = require('../build/Release/leveled')
 
 var leveled = new Leveled('/tmp/foo');
 
@@ -63,6 +64,32 @@ describe('leveled', function() {
   describe('.getSync(key)', function() {
     it('should require key argument', function() {
       leveled.getSync.bind(leveled).should.throw();
+    })
+  })
+  describe('.createBatch()', function() {
+    it('should create one', function() {
+      leveled.createBatch()
+    })
+  })
+})
+
+var batch
+describe('Batch', function() {
+  beforeEach(function() {
+    batch = leveled.createBatch()
+  })
+  describe('.put', function() {
+    it('should work', function() {
+      batch.put('foo', 'bar123')
+      batch.writeSync()
+      leveled.getSync('foo').should.equal('bar123')
+    })
+  })
+  describe('.del', function() {
+    it('should work', function() {
+      batch.del('foo')
+      batch.writeSync()
+      leveled.getSync('foo').should.equal('')
     })
   })
 })

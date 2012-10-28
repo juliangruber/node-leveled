@@ -78,9 +78,52 @@ function readAsync (cb) {
   }
 }
 
+function batchSync () {
+  console.log('putting in data batched (sync)');
+  var start = Date.now();
+
+  var batch = leveled.createBatch();
+
+  for (var i = 0; i < count; i++) {
+    batch.put(i, '1337,1337,1337,1337,1337');
+  }
+
+  batch.writeSync();
+
+  var duration = Date.now()-start;
+  console.log([
+    count, ' records written in ', duration, 'ms (',
+    Math.floor(1000/duration * count) +' w/s)'
+  ].join(''));
+}
+
+function batchAsync(cb) {
+  console.log('putting in data batched (async)');
+  start = Date.now();
+
+  var batch = leveled.createBatch();
+  for (var i = 0; i < count; i++) {
+    batch.put(i, '1337,1337,1337,1337,1337');
+  }
+  
+  batch.write(function (err) {
+    if (err) throw err;
+    duration = Date.now()-start;
+    console.log([
+      count, ' records written in ', duration, 'ms (',
+      Math.floor(1000/duration * count) +' w/s)'
+    ].join(''));
+    if (cb) cb();
+  });
+}
+
 putAsync(function () {
   readAsync(function () {
     putSync()
     readSync()
+    batchSync()
+    batchAsync(function () {
+      console.log('Yay!')
+    })
   })
 })

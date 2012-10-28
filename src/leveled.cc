@@ -4,6 +4,7 @@
 #include <leveldb/write_batch.h>
 
 #include "leveled.h"
+#include "batch.h"
 
 using namespace v8;
 using namespace node;
@@ -23,6 +24,8 @@ void Leveled::Initialize(Handle<Object> target) {
   SetPrototypeMethod(constructor, "getSync", GetSync);
   SetPrototypeMethod(constructor, "put", Put);
   SetPrototypeMethod(constructor, "putSync", PutSync);
+  SetPrototypeMethod(constructor, "write", Write);
+  SetPrototypeMethod(constructor, "writeSync", WriteSync);
 
   target->Set(String::NewSymbol("Db"), constructor->GetFunction());
 }
@@ -49,7 +52,7 @@ Handle<Value> Leveled::New(const Arguments& args) {
 
 Handle<Value> Leveled::GetSync(const Arguments& args) {
   HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
 
   if (args.Length() == 0) {
     ThrowException(Exception::Error(String::New("key required")));
@@ -73,7 +76,7 @@ Handle<Value> Leveled::GetSync(const Arguments& args) {
 
 Handle<Value> Leveled::Get(const Arguments& args) {
   HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
 
   if (args.Length() < 2 || !args[1]->IsFunction()) {
     ThrowException(Exception::Error(String::New("key and cb required")));
@@ -90,8 +93,7 @@ Handle<Value> Leveled::Get(const Arguments& args) {
 
   uv_queue_work(uv_default_loop(), req, GetDoing, GetAfter);
 
-  //return scope.Close(args.This());
-  return args.This();
+  return scope.Close(args.Holder());
 }
 
 void Leveled::GetDoing (uv_work_t *req) {
@@ -135,7 +137,7 @@ void Leveled::GetAfter (uv_work_t *req) {
 
 Handle<Value> Leveled::PutSync(const Arguments& args) {
   HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
 
   if (args.Length() < 2) {
     ThrowException(Exception::Error(String::New("Key and Value required")));
@@ -152,7 +154,7 @@ Handle<Value> Leveled::PutSync(const Arguments& args) {
     return scope.Close(Undefined());
   }
 
-  return scope.Close(args.This());
+  return scope.Close(args.Holder());
 }
 
 /**
@@ -166,9 +168,9 @@ Handle<Value> Leveled::PutSync(const Arguments& args) {
 
 Handle<Value> Leveled::Put(const Arguments& args) {
   HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.This());
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
 
-  if (args[0]->IsUndefined() || args[1]->IsUndefined()) {
+  if (args.Length() < 2) {
     ThrowException(Exception::Error(String::New("key and value required")));
     return scope.Close(Undefined());
   }
@@ -187,8 +189,7 @@ Handle<Value> Leveled::Put(const Arguments& args) {
 
   uv_queue_work(uv_default_loop(), req, PutDoing, PutAfter);
 
-  // return scope.Clase(args.This());
-  return args.This();
+  return scope.Close(args.Holder());
 }
 
 void Leveled::PutDoing (uv_work_t *req) {
@@ -204,6 +205,97 @@ void Leveled::PutDoing (uv_work_t *req) {
 void Leveled::PutAfter (uv_work_t *req) {
   HandleScope scope;
   PutParams *params = (PutParams *)req->data;
+
+  Handle<Value> argv[0];
+
+  if (params->status.ok()) {
+    argv[0] = Local<Value>::New(Undefined());
+  } else {
+    argv[0] = Local<Value>::New(String::New(params->status.ToString().data()));
+  }
+
+  if (params->cb->IsFunction()) {
+    params->cb->Call(Context::GetCurrent()->Global(), 1, argv);
+  }
+
+  params->cb.Dispose();
+  delete params;
+  delete req;
+}
+
+/**
+ * WriteSync
+ *
+ * @param {object} batch
+ * @returns {object} Leveled
+ */
+
+Handle<Value> Leveled::WriteSync(const Arguments& args) {
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
+
+  if (args.Length() < 1) {
+    ThrowException(Exception::Error(String::New("batch required")));
+    return scope.Close(Undefined());
+  }
+
+  Batch* batch = node::ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
+
+  leveldb::Status status = self->db->Write(leveldb::WriteOptions(), &batch->batch);
+
+  if (!status.ok()) {
+    ThrowException(Exception::Error(String::New(status.ToString().data())));
+    return scope.Close(Undefined());
+  }
+
+  return scope.Close(args.Holder());
+}
+
+/**
+ * Write
+ *
+ * @param {object} batch
+ * @param {function=} cb
+ * @returns {object} Leveled
+ */
+
+Handle<Value> Leveled::Write(const Arguments& args) {
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
+
+  if (args.Length() < 1) {
+    ThrowException(Exception::Error(String::New("batch required")));
+    return scope.Close(Undefined());
+  }
+
+  uv_work_t *req = new uv_work_t;
+
+  WriteParams *params = new WriteParams;
+  params->self = self;
+  params->cb = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+
+  Batch* batch = node::ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
+  params->batch = batch;
+  
+  req->data = params;
+
+  uv_queue_work(uv_default_loop(), req, WriteDoing, WriteAfter);
+
+  return scope.Close(args.Holder());
+}
+
+void Leveled::WriteDoing (uv_work_t *req) {
+  WriteParams *params = (WriteParams *)req->data;
+
+  params->status = params->self->db->Write(
+    leveldb::WriteOptions(),
+    &params->batch->batch
+  );
+}
+
+void Leveled::WriteAfter (uv_work_t *req) {
+  HandleScope scope;
+  WriteParams *params = (WriteParams *)req->data;
 
   Handle<Value> argv[0];
 
@@ -251,5 +343,6 @@ Leveled::~Leveled() {
 
 extern "C" void init(Handle<Object> target) {
   Leveled::Initialize(target);
+  Batch::Initialize(target);
 }
 NODE_MODULE(leveled, init);

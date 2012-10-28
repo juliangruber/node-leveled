@@ -39,3 +39,15 @@ Leveled.prototype.put = function (key, val, cb) {
 Leveled.prototype.putSync = function (key, val, cb) {
   return this.db.putSync.apply(this.db, arguments)
 }
+
+Leveled.prototype.createBatch = function () {
+  var db = this.db;
+  var batch = new binding.Batch()
+  batch.writeSync = function () {
+    return db.writeSync(batch)
+  }
+  batch.write = function (cb) {
+    return db.write(batch, cb)
+  }
+  return batch
+}
