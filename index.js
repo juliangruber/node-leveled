@@ -5,8 +5,8 @@ module.exports = Leveled;
 
 function Leveled(path) {
   if (!(this instanceof Leveled)) return new Leveled(path)
-  this.db = new binding.Db(path)
-  this.queue = FunctionQueue();
+  var db = this.db = new binding.Db(path)
+  this.queue = new Queue(this)
 }
 
 Leveled.prototype.get = function (key, cb) {
@@ -21,18 +21,16 @@ Leveled.prototype.getSync = function (key, cb) {
  * LevelDB only allows for one put operation at a time
  * so we have to queue this
  *
- * TODO: Do this in c, crossing the c/js boundary is waaay too expansive
+ * TODO: Do this in c, crossing the c/js boundary is waaay too expensive
  */
 Leveled.prototype.put = function (key, val, cb) {
   if (typeof key == 'undefined' || typeof val == 'undefined') {
     return cb(new Error('key and value required'))
   }
-  var db = this.db
-  this.queue.push(function (next) {
-    db.put.call(db, key, val, function () {
-      if (cb) cb()
-      next()
-    })
+  this.queue.push({
+    key : key,
+    val : val,
+    cb : cb
   })
 }
 
@@ -50,4 +48,36 @@ Leveled.prototype.createBatch = function () {
     return db.write(batch, cb)
   }
   return batch
+}
+
+function Queue(leveled) {
+  this.leveled = leveled
+  this.queue = []
+  this.processing = false
+}
+
+Queue.prototype.push = function (obj) {
+  this.queue.push(obj)
+  if (!this.processing) this.process()
+}
+
+Queue.prototype.process = function () {
+  var self = this
+  self.processing = true
+  var batch = self.leveled.createBatch()
+  
+  for (var i = 0, len = self.queue.length; i < len; i++) {
+    batch.put(self.queue[i].key, self.queue[i].val)
+  }
+
+  var queue = self.queue.slice()
+  self.queue = []
+
+  batch.write(function (err) {
+    for (var i = 0, len = queue.length; i < len; i++) {
+      if (queue[i].cb) queue[i].cb(err)
+    }
+    self.processing = false
+    if (self.queue.length) self.process()
+  })
 }
