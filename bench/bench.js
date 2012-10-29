@@ -5,7 +5,7 @@ var leveled = new Leveled("/tmp/foo");
 
 // bench -----------------------------------
 
-var count = 300000;
+var count = 800000;
 
 function putSync () {
   console.log('putting in data (sync)');
