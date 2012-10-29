@@ -120,7 +120,11 @@ void Leveled::GetAfter (uv_work_t *req) {
 
   argv[1] = Local<Value>::New(String::New(params->rtn.data()));
 
+  TryCatch try_catch;
   params->cb->Call(Context::GetCurrent()->Global(), 2, argv);
+  if (try_catch.HasCaught()) {
+    FatalException(try_catch);
+  }
 
   params->cb.Dispose();
   delete params;
@@ -215,7 +219,11 @@ void Leveled::PutAfter (uv_work_t *req) {
   }
 
   if (params->cb->IsFunction()) {
+    TryCatch try_catch;
     params->cb->Call(Context::GetCurrent()->Global(), 1, argv);
+    if (try_catch.HasCaught()) {
+      FatalException(try_catch);
+    }
   }
 
   params->cb.Dispose();
