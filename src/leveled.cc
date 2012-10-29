@@ -241,7 +241,10 @@ Handle<Value> Leveled::WriteSync(const Arguments& args) {
 
   Batch* batch = node::ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
 
-  leveldb::Status status = self->db->Write(leveldb::WriteOptions(), &batch->batch);
+  leveldb::Status status = self->db->Write(
+    leveldb::WriteOptions(),
+    &batch->batch
+  );
 
   if (!status.ok()) {
     ThrowException(Exception::Error(String::New(status.ToString().data())));
@@ -277,8 +280,7 @@ Handle<Value> Leveled::Write(const Arguments& args) {
 
   uv_queue_work(uv_default_loop(), &params->request, WriteDoing, WriteAfter);
 
-  //return scope.Close(args.Holder());
-  return args.Holder();
+  return scope.Close(args.Holder());
 }
 
 void Leveled::WriteDoing (uv_work_t *req) {
