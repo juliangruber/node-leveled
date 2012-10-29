@@ -11,7 +11,6 @@ class Batch : public ObjectWrap {
 public:
   static void Initialize(Handle<Object> target);
 
-  static Persistent<FunctionTemplate> constructor;
   static Handle<Value> New(const Arguments &args);
 
   static Handle<Value> Put(const Arguments &args);
@@ -23,6 +22,7 @@ private:
   friend class Leveled;
   Batch();
   ~Batch();
+  static Persistent<FunctionTemplate> constructor;
 };
 
 #endif

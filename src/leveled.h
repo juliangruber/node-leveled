@@ -13,7 +13,6 @@ class Leveled : public ObjectWrap {
 public:
   static void Initialize(Handle<Object> target);
 
-  static Persistent<FunctionTemplate> constructor;
   static Handle<Value> New(const Arguments &args);
 
   static Handle<Value> GetSync(const Arguments &args);
@@ -34,6 +33,7 @@ public:
 private:
   Leveled(char* path);
   ~Leveled();
+  static Persistent<FunctionTemplate> constructor;
   leveldb::DB *db;
 };
 
