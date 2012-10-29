@@ -10,8 +10,6 @@ using namespace node;
 class Batch : public ObjectWrap {
 public:
   static void Initialize(Handle<Object> target);
-  Batch();
-  ~Batch();
 
   static Persistent<FunctionTemplate> constructor;
   static Handle<Value> New(const Arguments &args);
@@ -23,6 +21,8 @@ public:
   leveldb::WriteBatch batch;
 private:
   friend class Leveled;
+  Batch();
+  ~Batch();
 };
 
 #endif

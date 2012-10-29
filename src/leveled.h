@@ -12,8 +12,6 @@ using namespace node;
 class Leveled : public ObjectWrap {
 public:
   static void Initialize(Handle<Object> target);
-  Leveled(char* path);
-  ~Leveled();
 
   static Persistent<FunctionTemplate> constructor;
   static Handle<Value> New(const Arguments &args);
@@ -34,6 +32,8 @@ public:
   static void WriteAfter(uv_work_t *req);
 
 private:
+  Leveled(char* path);
+  ~Leveled();
   leveldb::DB *db;
 };
 
