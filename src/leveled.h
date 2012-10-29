@@ -13,6 +13,12 @@ class Leveled : public ObjectWrap {
 public:
   static void Initialize(Handle<Object> target);
 
+private:
+  Leveled(char* path);
+  ~Leveled();
+  static Persistent<FunctionTemplate> constructor;
+  leveldb::DB *db;
+
   static Handle<Value> New(const Arguments &args);
 
   static Handle<Value> GetSync(const Arguments &args);
@@ -29,12 +35,6 @@ public:
   static Handle<Value> Write(const Arguments &args);
   static void WriteDoing(uv_work_t *req);
   static void WriteAfter(uv_work_t *req);
-
-private:
-  Leveled(char* path);
-  ~Leveled();
-  static Persistent<FunctionTemplate> constructor;
-  leveldb::DB *db;
 };
 
 struct GetParams {
