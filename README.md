@@ -5,6 +5,14 @@ LevelDB
 
 The stored data must always be in String format (or possibly a Buffer?)
 
+## Features
+
+* sync and async methods, except for `leveled(path)`, which opens the db
+  syncronously
+* `put`s are batched automatically since _leveldb_ only supports one put at
+  at time. That makes inserting way faster (see benchmarks)
+* `get`s are always concurrent
+
 ## Usage
 
 ```javascript
@@ -12,16 +20,45 @@ var leveldb = require('leveled');
 
 var db = leveldb('/tmp/mydb');
 
-db.set('foo', 'bar')
+db.putSync('foo', 'bar')
 
 db.get('some', function (err, val) {
   val == 'value';
 })
 
-var batch = new db.batch();
-batch.set('foo', 'bar')
-batch.get('foo')
-batch.start(function(err, val) {
-  val == 'foo';
-});
+var batch = db.createBatch()
+batch.put('foo', 'bar')
+batch.del('baz')
+batch.writeSync()
 ```
+
+## Installation
+
+```bash
+$ npm install leveled
+```
+
+## API
+
+### leveled(path)
+
+### leveled#put(key, val[, cb])
+### leveled#putSync(key, val)
+
+### leveled#get(key, cb)
+### leveled#getSync(key)
+
+### leveled#del(key[, cb])
+### leveled#delSync(key)
+
+### leveled#createBatch()
+
+### batch#put(key, val)
+### batch#del(key)
+
+### batch#write(cb)
+### batch#writeSync()
+
+## License
+
+(MIT)
