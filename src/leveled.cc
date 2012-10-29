@@ -268,36 +268,31 @@ Handle<Value> Leveled::Write(const Arguments& args) {
     return scope.Close(Undefined());
   }
 
-  uv_work_t *req = new uv_work_t;
-
-  WriteParams *params = new WriteParams;
-  params->self = self;
+  WriteParams *params = new WriteParams();
+  params->request.data = params;
+  params->db = self->db;
   params->cb = Persistent<Function>::New(Local<Function>::Cast(args[1]));
 
-  Batch* batch = node::ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
-  params->batch = batch;
-  
-  req->data = params;
+  params->batch = ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
 
-  uv_queue_work(uv_default_loop(), req, WriteDoing, WriteAfter);
+  uv_queue_work(uv_default_loop(), &params->request, WriteDoing, WriteAfter);
 
-  return scope.Close(args.Holder());
+  //return scope.Close(args.Holder());
+  return args.Holder();
 }
 
 void Leveled::WriteDoing (uv_work_t *req) {
   WriteParams *params = (WriteParams *)req->data;
+  leveldb::WriteBatch wb = params->batch->batch;
 
-  params->status = params->self->db->Write(
-    leveldb::WriteOptions(),
-    &params->batch->batch
-  );
+  params->status = params->db->Write(leveldb::WriteOptions(), &wb);
 }
 
 void Leveled::WriteAfter (uv_work_t *req) {
   HandleScope scope;
   WriteParams *params = (WriteParams *)req->data;
 
-  Handle<Value> argv[0];
+  Handle<Value> argv[1];
 
   if (params->status.ok()) {
     argv[0] = Local<Value>::New(Undefined());
@@ -306,12 +301,15 @@ void Leveled::WriteAfter (uv_work_t *req) {
   }
 
   if (params->cb->IsFunction()) {
+    TryCatch try_catch;
     params->cb->Call(Context::GetCurrent()->Global(), 1, argv);
+    if (try_catch.HasCaught()) {
+      FatalException(try_catch);
+    }
   }
 
   params->cb.Dispose();
   delete params;
-  delete req;
 }
 
 /**

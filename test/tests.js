@@ -92,4 +92,19 @@ describe('Batch', function() {
       leveled.getSync('foo').should.equal('')
     })
   })
+  describe('.write', function() {
+    it('should work multiple time', function(done) {
+      var batch1 = leveled.createBatch()
+      var batch2 = leveled.createBatch()
+      batch1.put('foo', 'bar')
+      batch2.put('bar', 'baz')
+      batch1.write(function (err) {
+        if (err) throw err
+        batch2.write(function (err) {
+          if (err) throw err
+          done()
+        })
+      })
+    })
+  })
 })

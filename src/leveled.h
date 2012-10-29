@@ -54,10 +54,11 @@ struct PutParams {
 };
 
 struct WriteParams {
-  Leveled* self;
+  leveldb::DB* db;
   Batch* batch; 
   Persistent<Function> cb;
   leveldb::Status status;
+  uv_work_t request;
 };
 
 #endif

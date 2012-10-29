@@ -5,7 +5,7 @@ var leveled = new Leveled("/tmp/foo");
 
 // bench -----------------------------------
 
-var count = 120000;
+var count = 300000;
 
 function putSync () {
   console.log('putting in data (sync)');
@@ -105,7 +105,7 @@ function batchAsync(cb) {
   for (var i = 0; i < count; i++) {
     batch.put(i, '1337,1337,1337,1337,1337');
   }
-  
+
   batch.write(function (err) {
     if (err) throw err;
     duration = Date.now()-start;

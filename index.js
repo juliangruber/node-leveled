@@ -1,5 +1,4 @@
 var binding = require('./build/Release/leveled');
-var FunctionQueue = require('function-queue');
 
 module.exports = Leveled;
 
@@ -64,17 +63,19 @@ Queue.prototype.push = function (obj) {
 Queue.prototype.process = function () {
   var self = this
   self.processing = true
-  var batch = self.leveled.createBatch()
   
-  for (var i = 0, len = self.queue.length; i < len; i++) {
-    batch.put(self.queue[i].key, self.queue[i].val)
-  }
-
   var queue = self.queue.slice()
   self.queue = []
 
+  var batch = self.leveled.createBatch()
+  var len = queue.length
+
+  for (var i = 0; i < len; i++) {
+    batch.put(queue[i].key, queue[i].val)
+  }
+
   batch.write(function (err) {
-    for (var i = 0, len = queue.length; i < len; i++) {
+    for (var i = 0; i < len; i++) {
       if (queue[i].cb) queue[i].cb(err)
     }
     self.processing = false
