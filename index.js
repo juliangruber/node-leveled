@@ -24,6 +24,7 @@ Leveled.prototype.put = function (key, val, cb) {
   if (typeof key == 'undefined' || typeof val == 'undefined') {
     return cb(new Error('key and value required'))
   }
+
   this.queue.push({
     op : 'put',
     key : key,
@@ -48,7 +49,7 @@ Leveled.prototype.delSync = function (key) {
   return this.db.delSync.apply(this.db, arguments)
 }
 
-Leveled.prototype.createBatch = function () {
+Leveled.prototype.batch = function () {
   var db = this.db;
   var batch = new binding.Batch()
   batch.writeSync = function () {
@@ -78,7 +79,7 @@ Queue.prototype.process = function () {
   var queue = self.queue.slice()
   self.queue = []
 
-  var batch = self.leveled.createBatch()
+  var batch = self.leveled.batch()
   var len = queue.length
 
   for (var i = 0; i < len; i++) {

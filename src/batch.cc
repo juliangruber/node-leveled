@@ -45,6 +45,10 @@ Handle<Value> Batch::Put(const Arguments& args) {
     ThrowException(Exception::Error(String::New("Key and Value required")));
     return scope.Close(Undefined());
   }
+  if (!args[1]->IsString()) {
+    ThrowException(Exception::Error(String::New("Only strings as value")));
+    return scope.Close(Undefined());
+  }
 
   String::Utf8Value key(args[0]->ToString());
   String::Utf8Value val(args[1]->ToString());

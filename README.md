@@ -26,10 +26,13 @@ db.get('some', function (err, val) {
   val == 'value';
 })
 
-var batch = db.createBatch()
-batch.put('foo', 'bar')
-batch.del('baz')
-batch.writeSync()
+db
+  .batch()
+  .put('foo', 'bar')
+  .del('baz')
+  .write(function (err) {
+    // success
+  })
 ```
 
 ## Installation
@@ -51,7 +54,7 @@ $ npm install leveled
 ### leveled#del(key[, cb])
 ### leveled#delSync(key)
 
-### leveled#createBatch()
+### leveled#batch()
 
 ### batch#put(key, val)
 ### batch#del(key)

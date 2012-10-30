@@ -27,8 +27,10 @@ describe('leveled', function() {
       leveled.putSync(1, "one")
       leveled.getSync(1).should.equal("one")
     })
-    it('should store integer values')
-    it('should store js objects')
+    it('should store only strings', function() {
+      leveled.putSync.bind(leveled, 1, 1).should.throw()
+      leveled.putSync.bind(leveled, 1, {}).should.throw()
+    })
     it('should require key argument', function() {
       leveled.putSync.bind(leveled).should.throw()
     })
@@ -66,9 +68,9 @@ describe('leveled', function() {
       leveled.getSync.bind(leveled).should.throw()
     })
   })
-  describe('.createBatch()', function() {
+  describe('.batch()', function() {
     it('should create one', function() {
-      should.exist(leveled.createBatch())
+      should.exist(leveled.batch())
     })
   })
   describe('.delSync(key)', function() {
@@ -96,13 +98,16 @@ describe('leveled', function() {
 var batch
 describe('Batch', function() {
   beforeEach(function() {
-    batch = leveled.createBatch()
+    batch = leveled.batch()
   })
   describe('.put', function() {
     it('should work', function() {
       batch.put('foo', 'bar123')
       batch.writeSync()
       leveled.getSync('foo').should.equal('bar123')
+    })
+    it('should take only string values', function() {
+      batch.put.bind(batch, 'key', 1).should.throw()
     })
   })
   describe('.del', function() {
@@ -114,8 +119,8 @@ describe('Batch', function() {
   })
   describe('.write', function() {
     it('should work multiple time', function(done) {
-      var batch1 = leveled.createBatch()
-      var batch2 = leveled.createBatch()
+      var batch1 = leveled.batch()
+      var batch2 = leveled.batch()
       batch1.put('foo', 'bar')
       batch2.put('bar', 'baz')
       batch1.write(function (err) {
