@@ -5,7 +5,7 @@ var leveled = new Leveled("/tmp/foo");
 
 // bench -----------------------------------
 
-var count = 800000;
+var count = 1200000;
 
 function putSync () {
   console.log('putting in data (sync)');
@@ -57,6 +57,26 @@ function putAsync(cb) {
   }
 }
 
+function putAsyncSingle(cb) {
+  console.log('putting in data (async, single)');
+  start = Date.now();
+
+  var written = 0;
+  for (var i = 0; i < count; i++) {
+    leveled.put(i, '1337,1337,1337,1337,1337', function (err) {
+      if (err) throw err;
+      if (++written == count) {
+        duration = Date.now()-start;
+        console.log([
+          count, ' records written in ', duration, 'ms (',
+          Math.floor(1000/duration * count) +' w/s)'
+        ].join(''));
+        if (cb) cb();
+      }
+    })
+  }
+}
+
 function readAsync (cb) {
   console.log('reading data (async)');
   start = Date.now();
@@ -82,7 +102,7 @@ function batchSync () {
   console.log('putting in data batched (sync)');
   var start = Date.now();
 
-  var batch = leveled.createBatch();
+  var batch = leveled.batch();
 
   for (var i = 0; i < count; i++) {
     batch.put(i, '1337,1337,1337,1337,1337');
@@ -101,7 +121,7 @@ function batchAsync(cb) {
   console.log('putting in data batched (async)');
   start = Date.now();
 
-  var batch = leveled.createBatch();
+  var batch = leveled.batch();
   for (var i = 0; i < count; i++) {
     batch.put(i, '1337,1337,1337,1337,1337');
   }
@@ -118,12 +138,14 @@ function batchAsync(cb) {
 }
 
 putAsync(function () {
-  readAsync(function () {
-    putSync()
-    readSync()
-    batchSync()
-    batchAsync(function () {
-      console.log('Yay!')
+//  putAsyncSingle(function () {
+    readAsync(function () {
+      putSync()
+      readSync()
+      batchSync()
+      batchAsync(function () {
+        console.log('Yay!')
+      })
     })
-  })
+//  })
 })

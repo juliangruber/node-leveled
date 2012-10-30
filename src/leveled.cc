@@ -387,13 +387,13 @@ Handle<Value> Leveled::Del(const Arguments& args) {
   params->key = std::string(*key);
   req->data = params;
 
-  uv_queue_work(uv_default_loop(), req, GetDoing, GetAfter);
+  uv_queue_work(uv_default_loop(), req, DelDoing, DelAfter);
 
   return scope.Close(args.Holder());
 }
 
 void Leveled::DelDoing (uv_work_t *req) {
-  GetParams *params = (GetParams *)req->data;
+  DelParams *params = (DelParams *)req->data;
 
   params->status = params->self->db->Delete(
     leveldb::WriteOptions(),
@@ -403,7 +403,7 @@ void Leveled::DelDoing (uv_work_t *req) {
 
 void Leveled::DelAfter (uv_work_t *req) {
   HandleScope scope;
-  GetParams *params = (GetParams *)req->data;
+  DelParams *params = (DelParams *)req->data;
 
   Handle<Value> argv[1];
   
