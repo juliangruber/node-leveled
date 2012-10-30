@@ -16,6 +16,7 @@ public:
 private:
   Leveled(char* path);
   ~Leveled();
+
   static Persistent<FunctionTemplate> constructor;
   leveldb::DB *db;
 
@@ -35,6 +36,11 @@ private:
   static Handle<Value> Write(const Arguments &args);
   static void WriteDoing(uv_work_t *req);
   static void WriteAfter(uv_work_t *req);
+
+  static Handle<Value> DelSync(const Arguments &args);
+  static Handle<Value> Del(const Arguments &args);
+  static void DelDoing(uv_work_t *req);
+  static void DelAfter(uv_work_t *req);
 };
 
 struct GetParams {
@@ -59,6 +65,13 @@ struct WriteParams {
   Persistent<Function> cb;
   leveldb::Status status;
   uv_work_t request;
+};
+
+struct DelParams {
+  Leveled* self;
+  std::string key; 
+  Persistent<Function> cb;
+  leveldb::Status status;
 };
 
 #endif

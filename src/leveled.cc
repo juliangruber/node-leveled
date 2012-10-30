@@ -26,6 +26,8 @@ void Leveled::Initialize(Handle<Object> target) {
   SetPrototypeMethod(constructor, "putSync", PutSync);
   SetPrototypeMethod(constructor, "write", Write);
   SetPrototypeMethod(constructor, "writeSync", WriteSync);
+  SetPrototypeMethod(constructor, "del", Del);
+  SetPrototypeMethod(constructor, "delSync", DelSync);
 
   target->Set(String::NewSymbol("Db"), constructor->GetFunction());
 }
@@ -61,7 +63,11 @@ Handle<Value> Leveled::GetSync(const Arguments& args) {
 
   String::Utf8Value key(args[0]->ToString());
   std::string value;
-  self->db->Get(leveldb::ReadOptions(), *key, &value);
+  leveldb::Status status = self->db->Get(leveldb::ReadOptions(), *key, &value);
+
+  if (!status.ok()) {
+    ThrowException(Exception::Error(String::New(status.ToString().data())));
+  }
 
   return scope.Close(String::New(value.data()));
 }
@@ -110,7 +116,7 @@ void Leveled::GetAfter (uv_work_t *req) {
   HandleScope scope;
   GetParams *params = (GetParams *)req->data;
 
-  Handle<Value> argv[1];
+  Handle<Value> argv[2];
   
   if (params->status.ok()) {
     argv[0] = Local<Value>::New(Undefined());
@@ -210,7 +216,7 @@ void Leveled::PutAfter (uv_work_t *req) {
   HandleScope scope;
   PutParams *params = (PutParams *)req->data;
 
-  Handle<Value> argv[0];
+  Handle<Value> argv[1];
 
   if (params->status.ok()) {
     argv[0] = Local<Value>::New(Undefined());
@@ -320,6 +326,94 @@ void Leveled::WriteAfter (uv_work_t *req) {
 
   params->cb.Dispose();
   delete params;
+}
+
+/**
+ * DelSync
+ *
+ * @param {string} key
+ * @returns {Object} Leveled
+ */
+
+Handle<Value> Leveled::DelSync(const Arguments& args) {
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
+
+  if (args.Length() == 0) {
+    ThrowException(Exception::Error(String::New("key required")));
+    return scope.Close(Undefined());
+  }
+
+  String::Utf8Value key(args[0]->ToString());
+  leveldb::Status status = self->db->Delete(leveldb::WriteOptions(), *key);
+
+  if (!status.ok()) {
+    ThrowException(Exception::Error(String::New(status.ToString().data())));
+  }
+
+  return scope.Close(args.Holder());
+}
+
+/**
+ * Del
+ *
+ * @param {string} key
+ * @param {function} cb
+ * @returns {object} Leveled
+ */
+
+Handle<Value> Leveled::Del(const Arguments& args) {
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
+
+  if (args.Length() < 2 || !args[1]->IsFunction()) {
+    ThrowException(Exception::Error(String::New("key and cb required")));
+    return scope.Close(Undefined());
+  }
+
+  uv_work_t *req = new uv_work_t;
+  DelParams *params = new DelParams;
+  params->self = self;
+  params->cb = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+  String::Utf8Value key(args[0]->ToString());
+  params->key = std::string(*key);
+  req->data = params;
+
+  uv_queue_work(uv_default_loop(), req, GetDoing, GetAfter);
+
+  return scope.Close(args.Holder());
+}
+
+void Leveled::DelDoing (uv_work_t *req) {
+  GetParams *params = (GetParams *)req->data;
+
+  params->status = params->self->db->Delete(
+    leveldb::WriteOptions(),
+    params->key
+  );
+}
+
+void Leveled::DelAfter (uv_work_t *req) {
+  HandleScope scope;
+  GetParams *params = (GetParams *)req->data;
+
+  Handle<Value> argv[1];
+  
+  if (params->status.ok()) {
+    argv[0] = Local<Value>::New(Undefined());
+  } else {
+    argv[0] = Local<Value>::New(String::New(params->status.ToString().data()));
+  }
+
+  TryCatch try_catch;
+  params->cb->Call(Context::GetCurrent()->Global(), 1, argv);
+  if (try_catch.HasCaught()) {
+    FatalException(try_catch);
+  }
+
+  params->cb.Dispose();
+  delete params;
+  delete req;
 }
 
 /**

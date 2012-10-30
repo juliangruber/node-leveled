@@ -18,15 +18,14 @@ Leveled.prototype.getSync = function (key, cb) {
 
 /**
  * LevelDB only allows for one put operation at a time
- * so we have to queue this
- *
- * TODO: Do this in c, crossing the c/js boundary is waaay too expensive
+ * so we batch this
  */
 Leveled.prototype.put = function (key, val, cb) {
   if (typeof key == 'undefined' || typeof val == 'undefined') {
     return cb(new Error('key and value required'))
   }
   this.queue.push({
+    op : 'put',
     key : key,
     val : val,
     cb : cb
@@ -35,6 +34,18 @@ Leveled.prototype.put = function (key, val, cb) {
 
 Leveled.prototype.putSync = function (key, val, cb) {
   return this.db.putSync.apply(this.db, arguments)
+}
+
+Leveled.prototype.del = function (key, cb) {
+  this.queue.push({
+    op : 'del',
+    key : key,
+    cb : cb
+  })
+}
+
+Leveled.prototype.delSync = function (key) {
+  return this.db.delSync.apply(this.db, arguments)
 }
 
 Leveled.prototype.createBatch = function () {
@@ -71,7 +82,7 @@ Queue.prototype.process = function () {
   var len = queue.length
 
   for (var i = 0; i < len; i++) {
-    batch.put(queue[i].key, queue[i].val)
+    batch[queue[i].op](queue[i].key, queue[i].val)
   }
 
   batch.write(function (err) {

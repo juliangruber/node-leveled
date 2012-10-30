@@ -1,74 +1,94 @@
-var should = require('should');
-var Leveled = require('../');
+var should = require('should')
+var Leveled = require('../')
 var binding = require('../build/Release/leveled')
 
-var leveled = new Leveled('/tmp/foo');
+var leveled = new Leveled('/tmp/foo')
 
 describe('leveled', function() {
   describe('new Leveled(path)', function() {
     it('should return a db', function() {
-      (new Leveled('/tmp/foo1')).should.be.ok;
-      Leveled('/tmp/foo2').should.be.ok;
+      (new Leveled('/tmp/foo1')).should.be.ok
+      Leveled('/tmp/foo2').should.be.ok
     })
     it('should require a valid path', function() {
-      Leveled.bind(this, '/a/b/c/d/e').should.throw();
+      Leveled.bind(this, '/a/b/c/d/e').should.throw()
     })
   })
   describe('.putSync(key, value)', function() {
     it('should require key and value', function() {
-      leveled.putSync.bind(leveled).should.throw();
-      leveled.putSync.bind(leveled, 'key').should.throw();
+      leveled.putSync.bind(leveled).should.throw()
+      leveled.putSync.bind(leveled, 'key').should.throw()
     })
     it('should store a value', function() {
-      leveled.putSync("key", "value");
-      leveled.getSync("key").should.equal("value");
+      leveled.putSync("key", "value")
+      leveled.getSync("key").should.equal("value")
     })
     it('should support integer keys', function() {
-      leveled.putSync(1, "one");
-      leveled.getSync(1).should.equal("one");
+      leveled.putSync(1, "one")
+      leveled.getSync(1).should.equal("one")
     })
     it('should store integer values')
     it('should store js objects')
     it('should require key argument', function() {
-      leveled.putSync.bind(leveled).should.throw();
+      leveled.putSync.bind(leveled).should.throw()
     })
-  });
+  })
   describe('.put(key, value[, cb])', function() {
     it('should store a value', function(done) {
       leveled.put('key', 'value', function (err) {
-        should.not.exist(err);
-        leveled.getSync('key').should.equal('value');
-        done();
+        should.not.exist(err)
+        leveled.getSync('key').should.equal('value')
+        done()
       })
     })
     it('should require key and value', function() {
-      leveled.put.bind(leveled).should.throw();
-      leveled.put.bind(leveled, 'key').should.throw();
-      leveled.put.bind(leveled, 'key', 'value').should.not.throw();
+      leveled.put.bind(leveled).should.throw()
+      leveled.put.bind(leveled, 'key').should.throw()
+      leveled.put.bind(leveled, 'key', 'value').should.not.throw()
     })
   })
   describe('.get(key, val)', function() {
     it('should require both arguments', function() {
-      leveled.get.bind(leveled).should.throw();
-      leveled.get.bind(leveled, 'key').should.throw();
+      leveled.get.bind(leveled).should.throw()
+      leveled.get.bind(leveled, 'key').should.throw()
     })
     it('should get a value', function(done) {
-      leveled.putSync('key', 'value');
+      leveled.putSync('key', 'value')
       leveled.get('key', function (err, value) {
-        if (err) throw err;
-        value.should.equal('value');
-        done();
+        if (err) throw err
+        value.should.equal('value')
+        done()
       })
     })
   })
   describe('.getSync(key)', function() {
     it('should require key argument', function() {
-      leveled.getSync.bind(leveled).should.throw();
+      leveled.getSync.bind(leveled).should.throw()
     })
   })
   describe('.createBatch()', function() {
     it('should create one', function() {
-      leveled.createBatch()
+      should.exist(leveled.createBatch())
+    })
+  })
+  describe('.delSync(key)', function() {
+    it('should delete', function() {
+      leveled.putSync('foo', 'bar')
+      leveled.getSync('foo').should.equal('bar')
+      leveled.getSync('foo').should.equal('bar')
+      leveled.delSync('foo')
+      leveled.getSync.bind(leveled, 'foo').should.throw()
+    })
+  })
+  describe('.del(key)', function() {
+    it('should delete', function(done) {
+      leveled.putSync('foo', 'bar')
+      leveled.getSync('foo').should.equal('bar')
+      leveled.del('foo', function (err) {
+        should.not.exist(err)
+        leveled.getSync.bind(leveled, 'foo').should.throw()
+        done()
+      }) 
     })
   })
 })
@@ -89,7 +109,7 @@ describe('Batch', function() {
     it('should work', function() {
       batch.del('foo')
       batch.writeSync()
-      leveled.getSync('foo').should.equal('')
+      leveled.getSync.bind(leveled, 'foo').should.throw()
     })
   })
   describe('.write', function() {
