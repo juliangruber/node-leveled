@@ -3,15 +3,8 @@
 
 A js-style LevelDB binding for node.
 
-## Features
-
-* sync and async methods, except for the constructor, which opens the db
-  syncronously
-* `put/del` operations are batched automatically since _LevelDB_ only supports
-  one write at a time. That makes inserting way faster (see benchmarks)
-* `get` operations are always concurrent
-* the datatype is plain strings, support for buffers and other formats may be
-  added
+The datatype is plain strings, support for buffers and other formats may be
+added.
 
 ## Usage
 
