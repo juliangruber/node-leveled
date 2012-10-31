@@ -52,6 +52,33 @@ $ npm install leveled
 ### batch#write(cb)
 ### batch#writeSync()
 
+## TODO
+
+* evaluate `leveldb::Slice` for storage
+* evaluate buffers as data type
+* evaluate storing native js objects
+* implement iterators
+  * check less verbose iterator patterns
+* develop middleware api
+  * check connect middleware api
+  * check other middleware implementations
+
+```javascript
+// use queue.js for put operations
+leveled.use(function (req, res, next) {
+  if (req.method != 'put') return next()
+  queue.put(res, res)
+})
+```
+
+```javascript
+// always use uppercase keys
+leveled.use(function (req, res, next) {
+  req.key = req.key.toUppercase()
+  next()
+})
+```
+
 ## License
 
 (MIT)
