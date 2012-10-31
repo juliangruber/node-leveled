@@ -1,4 +1,3 @@
-
 # node-leveled
 
 A js-style LevelDB binding for node.
@@ -76,6 +75,23 @@ leveled.use(function (req, res, next) {
 leveled.use(function (req, res, next) {
   req.key = req.key.toUppercase()
   next()
+})
+```
+
+```javascript
+// compress data
+leveled.use(function (req, res, next) {
+  if (req.method == 'del') return next()
+  if (req.method == 'get') {
+    var oldWrite = res.write
+    return res.write = function (data) {
+      uncompress(data)
+      oldWrite(data)
+    }
+  }
+  if (req.method == 'put') {
+    return req.val = compress(val)
+  }
 })
 ```
 
