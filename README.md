@@ -85,8 +85,7 @@ leveled.use(function (req, res, next) {
   if (req.method == 'get') {
     var oldWrite = res.write
     return res.write = function (data) {
-      uncompress(data)
-      oldWrite(data)
+      oldWrite(uncompress(data))
     }
   }
   if (req.method == 'put') {
