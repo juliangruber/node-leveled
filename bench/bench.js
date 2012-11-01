@@ -19,7 +19,7 @@ function putSync () {
   log(true, count, 'put', duration, count);
 }
 
-function readSync () {
+function getSync () {
   start = Date.now();
 
   for (var i = 0; i < count; i++) {
@@ -46,7 +46,7 @@ function putAsync(cb) {
   }
 }
 
-function readAsync (cb) {
+function getAsync (cb) {
   start = Date.now();
 
   var received = 0;
@@ -104,8 +104,8 @@ putAsync(function () {
   putSync()
   batchAsync(function () {
     batchSync()
-    readAsync(function () {
-      readSync()
+    getAsync(function () {
+      getSync()
       console.log()
     })
   })
