@@ -54,7 +54,7 @@ $ npm install leveled
 
 ## Benchmark
 
-Dunno yet why 'leveled#get(key, cb)' is so slow...
+Dunno yet why `leveled#get(key, cb)` is so slow...
 
 ```bash
 $ node bench/bench.js
