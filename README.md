@@ -56,6 +56,7 @@ $ npm install leveled
 * evaluate `leveldb::Slice` for storage
 * evaluate buffers as data type
 * evaluate storing native js objects
+* evaluate msgpack
 * implement iterators
   * check less verbose iterator patterns
 * develop middleware api
