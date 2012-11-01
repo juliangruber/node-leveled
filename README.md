@@ -52,6 +52,15 @@ $ npm install leveled
 ### batch#write(cb)
 ### batch#writeSync()
 
+## TODO
+
+* evaluate leveldb::Slice for storage
+* evaluate buffers as data type
+* evaluate storing native js objects
+* evaluate msgpack
+* implement iterators
+  * check less verbose iterator patterns
+
 ## License
 
 (MIT)
