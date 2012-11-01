@@ -59,14 +59,14 @@ $ node bench/bench.js
 
   benchmarking with 120,000 records, 24 chars each
 
-          put :  134,228 w/s in    894ms
-      putSync :  348,837 w/s in    344ms
+          put :  137,457 w/s in    873ms
+      putSync :  376,175 w/s in    319ms
 
         batch :  634,920 w/s in    189ms
-    batchSync :  364,741 w/s in    329ms
+    batchSync :  674,157 w/s in    178ms
 
-          get :   71,132 r/s in  1,687ms
-      getSync :  606,060 r/s in    198ms
+          get :   61,255 r/s in  1,959ms
+      getSync :  582,524 r/s in    206ms
 
 ```
 
