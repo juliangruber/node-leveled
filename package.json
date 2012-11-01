@@ -3,7 +3,8 @@
   "version" : "0.1.0",
   "devDependencies" : {
     "mocha" : "*",
-    "should" : "*"
+    "should" : "*",
+    "humanize-number" : "*"
   },
   "scripts" : {
     "test" : "mocha"

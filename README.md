@@ -57,16 +57,16 @@ $ npm install leveled
 ```bash
 $ node bench/bench.js
 
-  benchmarking with 120000 records, 24 chars each
+  benchmarking with 120,000 records, 24 chars each
 
-          put :  135746 w/s in   884ms
-      putSync :  369230 w/s in   325ms
+          put :  134,228 w/s in    894ms
+      putSync :  348,837 w/s in    344ms
 
-        batch :  634920 w/s in   189ms
-    batchSync :  396039 w/s in   303ms
+        batch :  634,920 w/s in    189ms
+    batchSync :  364,741 w/s in    329ms
 
-          get :   58536 r/s in  2050ms
-      getSync :  579710 r/s in   207ms
+          get :   71,132 r/s in  1,687ms
+      getSync :  606,060 r/s in    198ms
 
 ```
 

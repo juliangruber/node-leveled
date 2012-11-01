@@ -98,7 +98,7 @@ function batchAsync(cb) {
  * Get it started
  */
 
-console.log('\n  benchmarking with ' + count + ' records, ' + val.length + ' chars each\n');
+console.log('\n  benchmarking with ' + humanize(count) + ' records, ' + val.length + ' chars each\n');
 
 putAsync(function () {
   putSync()
@@ -122,13 +122,22 @@ function log(sync, num, op, dur, count) {
   console.log([
     pad(op + (sync? 'Sync' : ''), 13),
     ':',
-    pad(Math.floor(1000/dur * num), 7),
+    pad(humanize(Math.floor(1000/dur * num)), 8),
     {'batch' : 'w', 'put' : 'w', 'get' : 'r'}[op] + '/s',
-    'in ' + pad(dur, 5) + 'ms'
+    'in ' + pad(humanize(dur), 6) + 'ms'
    ].join(' '));
 }
 
 function pad(str, len) {
   str = str.toString();
   return Array(len - str.length + 1).join(' ') + str;
+}
+
+function humanize(n, options){
+  options = options || {};
+  var d = options.delimiter || ',';
+  var s = options.separator || '.';
+  n = n.toString().split('.');
+  n[0] = n[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1' + d);
+  return n.join(s);
 }
