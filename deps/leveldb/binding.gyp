@@ -10,7 +10,7 @@
   'target_defaults': {
     'defines': [
       'LEVELDB_PLATFORM_POSIX=1',
-      'OS_LINUX=1'
+      'OS_MACOSX=1'
     ],
     'include_dirs': [
       '.',
@@ -21,6 +21,12 @@
         'include_dirs': [
           'port/win',
         ],
+      }],
+      ['OS == "linux"', {
+        'defines': ['OS_LINUX=1']  
+      }],
+      ['OS == "mac"', {
+        'defines': ['OS_MACOSX=1']  
       }],
       ['use_snappy', {
         'defines': [
