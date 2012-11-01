@@ -52,6 +52,24 @@ $ npm install leveled
 ### batch#write(cb)
 ### batch#writeSync()
 
+## Benchmark
+
+```bash
+$ node bench/bench.js
+
+  benchmarking with 120000 records, 24 chars each
+
+          put :  135746 w/s in   884ms
+      putSync :  369230 w/s in   325ms
+
+        batch :  634920 w/s in   189ms
+    batchSync :  396039 w/s in   303ms
+
+          get :   58536 r/s in  2050ms
+      getSync :  579710 r/s in   207ms
+
+```
+
 ## TODO
 
 * evaluate leveldb::Slice for storage

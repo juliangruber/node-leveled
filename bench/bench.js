@@ -5,72 +5,41 @@ var leveled = new Leveled("/tmp/foo");
 
 // bench -----------------------------------
 
-var count = 1200000;
+var count = 120000;
+var val = '1337,1337,1337,1337,1337';
 
 function putSync () {
-  console.log('putting in data (sync)');
   var start = Date.now();
 
   for (var i = 0; i < count; i++) {
-    leveled.putSync(i, '1337,1337,1337,1337,1337');
+    leveled.putSync(i, val);
   }
 
   var duration = Date.now()-start;
-  console.log([
-    count, ' records written in ', duration, 'ms (',
-    Math.floor(1000/duration * count) +' w/s)'
-  ].join(''));
+  log(true, count, 'put', duration, count);
 }
 
 function readSync () {
-  console.log('reading data (sync)');
   start = Date.now();
 
   for (var i = 0; i < count; i++) {
-    assert(leveled.getSync(i) == '1337,1337,1337,1337,1337');
+    assert(leveled.getSync(i) == val);
   }
 
   duration = Date.now()-start;
-  console.log([
-    count, ' records read in ', duration, 'ms (',
-    Math.floor(1000/duration * count) +' r/s)'
-  ].join(''));
+  log(true, count, 'get', duration, count);
 }
 
 function putAsync(cb) {
-  console.log('putting in data (async)');
   start = Date.now();
 
   var written = 0;
   for (var i = 0; i < count; i++) {
-    leveled.put(i, '1337,1337,1337,1337,1337', function (err) {
+    leveled.put(i, val, function (err) {
       if (err) throw err;
       if (++written == count) {
         duration = Date.now()-start;
-        console.log([
-          count, ' records written in ', duration, 'ms (',
-          Math.floor(1000/duration * count) +' w/s)'
-        ].join(''));
-        if (cb) cb();
-      }
-    })
-  }
-}
-
-function putAsyncSingle(cb) {
-  console.log('putting in data (async, single)');
-  start = Date.now();
-
-  var written = 0;
-  for (var i = 0; i < count; i++) {
-    leveled.put(i, '1337,1337,1337,1337,1337', function (err) {
-      if (err) throw err;
-      if (++written == count) {
-        duration = Date.now()-start;
-        console.log([
-          count, ' records written in ', duration, 'ms (',
-          Math.floor(1000/duration * count) +' w/s)'
-        ].join(''));
+        log(false, count, 'put', duration, count);
         if (cb) cb();
       }
     })
@@ -78,20 +47,16 @@ function putAsyncSingle(cb) {
 }
 
 function readAsync (cb) {
-  console.log('reading data (async)');
   start = Date.now();
 
   var received = 0;
   for (var i = 0; i < count; i++) {
     leveled.get(i, function (err, value) {
       if (err) throw err;
-      assert(value == '1337,1337,1337,1337,1337');
+      assert(value == val);
       if (++received == count) {
         duration = Date.now()-start;
-        console.log([
-          count, ' records read in ', duration, 'ms (',
-          Math.floor(1000/duration * count) +' r/s)'
-        ].join(''));
+        log(false, count, 'get', duration, count);
         if (cb) cb()
       }
     })
@@ -99,53 +64,71 @@ function readAsync (cb) {
 }
 
 function batchSync () {
-  console.log('putting in data batched (sync)');
   var start = Date.now();
 
   var batch = leveled.batch();
 
   for (var i = 0; i < count; i++) {
-    batch.put(i, '1337,1337,1337,1337,1337');
+    batch.put(i, val);
   }
 
   batch.writeSync();
 
   var duration = Date.now()-start;
-  console.log([
-    count, ' records written in ', duration, 'ms (',
-    Math.floor(1000/duration * count) +' w/s)'
-  ].join(''));
+  log(true, count, 'batch', duration, count);
 }
 
 function batchAsync(cb) {
-  console.log('putting in data batched (async)');
   start = Date.now();
 
   var batch = leveled.batch();
   for (var i = 0; i < count; i++) {
-    batch.put(i, '1337,1337,1337,1337,1337');
+    batch.put(i, val);
   }
 
   batch.write(function (err) {
     if (err) throw err;
     duration = Date.now()-start;
-    console.log([
-      count, ' records written in ', duration, 'ms (',
-      Math.floor(1000/duration * count) +' w/s)'
-    ].join(''));
+    log(false, count, 'batch', duration, count);
     if (cb) cb();
   });
 }
 
+/*
+ * Get it started
+ */
+
+console.log('\n  benchmarking with ' + count + ' records, ' + val.length + ' chars each\n');
+
 putAsync(function () {
-//  putAsyncSingle(function () {
+  putSync()
+  batchAsync(function () {
+    batchSync()
     readAsync(function () {
-      putSync()
       readSync()
-      batchSync()
-      batchAsync(function () {
-        console.log('Yay!')
-      })
+      console.log()
     })
-//  })
+  })
 })
+
+/*
+ * Utility functions
+ */
+
+var last;
+function log(sync, num, op, dur, count) {
+  if (last && last != op) console.log();
+  last = op;
+  console.log([
+    pad(op + (sync? 'Sync' : ''), 13),
+    ':',
+    pad(Math.floor(1000/dur * num), 7),
+    {'batch' : 'w', 'put' : 'w', 'get' : 'r'}[op] + '/s',
+    'in ' + pad(dur, 5) + 'ms'
+   ].join(' '));
+}
+
+function pad(str, len) {
+  str = str.toString();
+  return Array(len - str.length + 1).join(' ') + str;
+}
