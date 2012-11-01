@@ -82,16 +82,15 @@ leveled.use(function (req, res, next) {
 ```javascript
 // compress data
 leveled.use(function (req, res, next) {
-  if (req.method == 'del') return next()
+  var write = res.write;
+
+  if (req.method == 'put') req.val = compress(val)
   if (req.method == 'get') {
-    var oldWrite = res.write
-    return res.write = function (data) {
-      oldWrite(uncompress(data))
+    res.write = function (data) {
+      write(decompress(data))
     }
   }
-  if (req.method == 'put') {
-    return req.val = compress(val)
-  }
+  next()
 })
 ```
 
