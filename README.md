@@ -94,8 +94,8 @@ leveled.use(function (req, res, next) {
 
   if (req.method == 'put') req.val = compress(req.val)
   if (req.method == 'get') {
-    res.end = function (data) {
-      end(decompress(data))
+    res.end = function (err, data) {
+      end(null, decompress(data))
     }
   }
   next()
