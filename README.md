@@ -104,7 +104,7 @@ leveled.use(function (req, res, next) {
 leveled.use(function (req, res, next) {
   var write = res.write;
 
-  if (req.method == 'put') req.val = compress(val)
+  if (req.method == 'put') req.val = compress(req.val)
   if (req.method == 'get') {
     res.write = function (data) {
       write(decompress(data))

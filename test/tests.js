@@ -53,16 +53,18 @@ describe('leveled', function() {
     })
   })
   describe('.get(key, val)', function() {
-    it('should require both arguments', function() {
+    /*it('should require both arguments', function() {
       leveled.get.bind(leveled).should.throw()
       leveled.get.bind(leveled, 'key').should.throw()
-    })
+    })*/
     it('should get a value', function(done) {
-      leveled.putSync('key', 'value')
-      leveled.get('key', function (err, value) {
-        if (err) throw err
-        value.should.equal('value')
-        done()
+      leveled.put('key', 'value', function (err) {
+        if (err) throw err;
+        leveled.get('key', function (err, value) {
+          if (err) throw err
+          value.should.equal('value')
+          done()
+        })
       })
     })
   })
@@ -87,13 +89,18 @@ describe('leveled', function() {
   })*/
   describe('.del(key)', function() {
     it('should delete', function(done) {
-      leveled.putSync('foo', 'bar')
-      leveled.getSync('foo').should.equal('bar')
-      leveled.del('foo', function (err) {
-        should.not.exist(err)
-        leveled.getSync.bind(leveled, 'foo').should.throw()
-        done()
-      }) 
+      leveled.put('foo', 'bar', function (err) {
+        if (err) throw err;
+        leveled.get('foo', function (err, val) {
+          if (err) throw err;
+          val.should.equal('bar'); 
+          leveled.del('foo', function (err) {
+            should.not.exist(err)
+            leveled.getSync.bind(leveled, 'foo').should.throw()
+            done()
+          }) 
+        })
+      })
     })
   })
 })
@@ -104,10 +111,14 @@ describe('Batch', function() {
     batch = leveled.batch()
   })
   describe('.put', function() {
-    it('should work', function() {
+    it('should work', function(done) {
       batch.put('foo', 'bar123')
       batch.writeSync()
-      leveled.getSync('foo').should.equal('bar123')
+      leveled.get('foo', function (err, val) {
+        if (err) throw err
+        val.should.equal('bar123')
+        done()
+      })
     })
     it('should take only string values', function() {
       batch.put.bind(batch, 'key', 1).should.throw()
@@ -138,9 +149,63 @@ describe('Batch', function() {
 })
 
 describe('middleware', function() {
-  it('should add', function() {
+  it('should add', function(done) {
     leveled.use(function (req, res, next) {
       next()
+    })
+    leveled.put('foo', 'bar', function (err) {
+      if (err) throw err
+      leveled.get('foo', function (err, val) {
+        if (err) throw err
+        val.should.equal('bar')
+        done()
+      })
+    })
+  })
+
+  it('should transform req', function(done) {
+    leveled.use(function (req, res, next) {
+      if (req.method != 'put') return next()
+      req.val = req.val.toUpperCase();
+      next()
+    })
+    leveled.put('foo', 'bar', function (err) {
+      if (err) throw err
+      leveled.get('foo', function (err, val) {
+        if (err) throw err
+        val.should.equal('BAR')
+        done()
+      })
+    })
+  })
+
+  it('should transform res', function(done) {
+    leveled.use(function (req, res, next) {
+      var write = res.write
+
+      if (req.method == 'put') req.val = compress(req.val)
+      if (req.method == 'get') res.write = function (err, data) {
+        write(null, decompress(data))
+      }
+      next()
+    })
+
+    function compress(data) {
+      return 'compressed' + data;
+    }
+
+    function decompress(data) {
+      console.log('data', data)
+      return data.split('compressed')[1];
+    }
+
+    leveled.put('fab', 'fob', function (err) {
+      if (err) throw err
+      leveled.get('fab', function (err, val) {
+        if (err) throw err
+        val.should.equal('fob')
+        done()
+      })
     })
   })
 })

@@ -84,7 +84,7 @@ Handle<Value> Leveled::Get(const Arguments& args) {
   HandleScope scope;
   Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
 
-  if (args.Length() < 2 || !(args[1]->IsString() || args[1]->IsNumber()) || !args[1]->IsFunction()) {
+  if (args.Length() < 2 || !(args[0]->IsString() || args[0]->IsNumber()) || !args[1]->IsFunction()) {
     ThrowException(Exception::Error(String::New("key and cb required")));
     return scope.Close(Undefined());
   }
