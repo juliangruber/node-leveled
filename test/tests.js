@@ -14,7 +14,7 @@ describe('leveled', function() {
       Leveled.bind(this, '/a/b/c/d/e').should.throw()
     })
   })
-  describe('.putSync(key, value)', function() {
+/*  describe('.putSync(key, value)', function() {
     it('should require key and value', function() {
       leveled.putSync.bind(leveled).should.throw()
       leveled.putSync.bind(leveled, 'key').should.throw()
@@ -34,13 +34,16 @@ describe('leveled', function() {
     it('should require key argument', function() {
       leveled.putSync.bind(leveled).should.throw()
     })
-  })
+  })*/
   describe('.put(key, value[, cb])', function() {
     it('should store a value', function(done) {
       leveled.put('key', 'value', function (err) {
         should.not.exist(err)
-        leveled.getSync('key').should.equal('value')
-        done()
+        leveled.get('key', function (err, val) {
+          if (err) throw err
+          val.should.equal('value')
+          done()
+        })
       })
     })
     it('should require key and value', function() {
@@ -63,17 +66,17 @@ describe('leveled', function() {
       })
     })
   })
-  describe('.getSync(key)', function() {
+/*  describe('.getSync(key)', function() {
     it('should require key argument', function() {
       leveled.getSync.bind(leveled).should.throw()
     })
-  })
+  })*/
   describe('.batch()', function() {
     it('should create one', function() {
       should.exist(leveled.batch())
     })
   })
-  describe('.delSync(key)', function() {
+/*  describe('.delSync(key)', function() {
     it('should delete', function() {
       leveled.putSync('foo', 'bar')
       leveled.getSync('foo').should.equal('bar')
@@ -81,7 +84,7 @@ describe('leveled', function() {
       leveled.delSync('foo')
       leveled.getSync.bind(leveled, 'foo').should.throw()
     })
-  })
+  })*/
   describe('.del(key)', function() {
     it('should delete', function(done) {
       leveled.putSync('foo', 'bar')
@@ -130,6 +133,14 @@ describe('Batch', function() {
           done()
         })
       })
+    })
+  })
+})
+
+describe('middleware', function() {
+  it('should add', function() {
+    leveled.use(function (req, res, next) {
+      next()
     })
   })
 })
