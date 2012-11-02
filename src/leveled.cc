@@ -21,13 +21,9 @@ void Leveled::Initialize(Handle<Object> target) {
   constructor->SetClassName(String::NewSymbol("Leveled"));
 
   SetPrototypeMethod(constructor, "get", Get);
-  SetPrototypeMethod(constructor, "getSync", GetSync);
   SetPrototypeMethod(constructor, "put", Put);
-  SetPrototypeMethod(constructor, "putSync", PutSync);
   SetPrototypeMethod(constructor, "write", Write);
-  SetPrototypeMethod(constructor, "writeSync", WriteSync);
   SetPrototypeMethod(constructor, "del", Del);
-  SetPrototypeMethod(constructor, "delSync", DelSync);
 
   target->Set(String::NewSymbol("Db"), constructor->GetFunction());
 }
@@ -43,33 +39,6 @@ Handle<Value> Leveled::New(const Arguments& args) {
   Leveled *wrapper = new Leveled(*name);
   wrapper->Wrap(args.Holder());
   return scope.Close(args.Holder());
-}
-
-/**
- * GetSync
- *
- * @param {string} key
- * @returns {string} result
- */
-
-Handle<Value> Leveled::GetSync(const Arguments& args) {
-  HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
-
-  if (args.Length() == 0) {
-    ThrowException(Exception::Error(String::New("key required")));
-    return scope.Close(Undefined());
-  }
-
-  String::Utf8Value key(args[0]->ToString());
-  std::string value;
-  leveldb::Status status = self->db->Get(leveldb::ReadOptions(), *key, &value);
-
-  if (!status.ok()) {
-    ThrowException(Exception::Error(String::New(status.ToString().data())));
-  }
-
-  return scope.Close(String::New(value.data()));
 }
 
 /**
@@ -135,40 +104,6 @@ void Leveled::GetAfter (uv_work_t *req) {
   params->cb.Dispose();
   delete params;
   delete req;
-}
-
-/**
- * PutSync
- *
- * @param {string} key
- * @param {string} val
- * @returns {object} Leveled
- */
-
-Handle<Value> Leveled::PutSync(const Arguments& args) {
-  HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
-
-  if (args.Length() < 2) {
-    ThrowException(Exception::Error(String::New("Key and Value required")));
-    return scope.Close(Undefined());
-  }
-  if (!args[1]->IsString()) {
-    ThrowException(Exception::Error(String::New("Only strings as values")));
-    return scope.Close(Undefined());
-  }
-
-  String::Utf8Value key(args[0]->ToString());
-  String::Utf8Value val(args[1]->ToString());
-
-  leveldb::Status status = self->db->Put(leveldb::WriteOptions(), *key, *val);
-
-  if (!status.ok()) {
-    ThrowException(Exception::Error(String::New(status.ToString().data())));
-    return scope.Close(Undefined());
-  }
-
-  return scope.Close(args.Holder());
 }
 
 /**
@@ -246,37 +181,6 @@ void Leveled::PutAfter (uv_work_t *req) {
 }
 
 /**
- * WriteSync
- *
- * @param {object} batch
- * @returns {object} Leveled
- */
-
-Handle<Value> Leveled::WriteSync(const Arguments& args) {
-  HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
-
-  if (args.Length() < 1) {
-    ThrowException(Exception::Error(String::New("batch required")));
-    return scope.Close(Undefined());
-  }
-
-  Batch* batch = node::ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
-
-  leveldb::Status status = self->db->Write(
-    leveldb::WriteOptions(),
-    &batch->batch
-  );
-
-  if (!status.ok()) {
-    ThrowException(Exception::Error(String::New(status.ToString().data())));
-    return scope.Close(Undefined());
-  }
-
-  return scope.Close(args.Holder());
-}
-
-/**
  * Write
  *
  * @param {object} batch
@@ -334,32 +238,6 @@ void Leveled::WriteAfter (uv_work_t *req) {
 
   params->cb.Dispose();
   delete params;
-}
-
-/**
- * DelSync
- *
- * @param {string} key
- * @returns {Object} Leveled
- */
-
-Handle<Value> Leveled::DelSync(const Arguments& args) {
-  HandleScope scope;
-  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
-
-  if (args.Length() == 0) {
-    ThrowException(Exception::Error(String::New("key required")));
-    return scope.Close(Undefined());
-  }
-
-  String::Utf8Value key(args[0]->ToString());
-  leveldb::Status status = self->db->Delete(leveldb::WriteOptions(), *key);
-
-  if (!status.ok()) {
-    ThrowException(Exception::Error(String::New(status.ToString().data())));
-  }
-
-  return scope.Close(args.Holder());
 }
 
 /**

@@ -33,12 +33,7 @@ Leveled.prototype.handle = function (method) {
     }
 
     var res = {
-      write : function (err, data) {
-        if (cb) cb(err, data)  
-      },
-      end : function (err, data) {
-        if (data) res.write(null, data)
-      }
+      end : cb
     }
 
     function next() {
@@ -46,9 +41,9 @@ Leveled.prototype.handle = function (method) {
 
       if (!layer) {
         switch (method) {
-          case 'get': db.get(req.key, res.write); break;
-          case 'del': db.del(req.key, res.write); break;
-          case 'put': db.put(req.key, req.val, res.write); break;
+          case 'get': db.get(req.key, res.end); break;
+          case 'del': db.del(req.key, res.end); break;
+          case 'put': db.put(req.key, req.val, res.end); break;
         }
         return
       }

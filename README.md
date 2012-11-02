@@ -35,13 +35,10 @@ $ npm install leveled
 ### leveled(path)
 
 ### leveled#put(key, val[, cb])
-### leveled#putSync(key, val)
 
 ### leveled#get(key, cb)
-### leveled#getSync(key)
 
 ### leveled#del(key[, cb])
-### leveled#delSync(key)
 
 ### leveled#batch()
 
@@ -49,7 +46,6 @@ $ npm install leveled
 ### batch#del(key)
 
 ### batch#write(cb)
-### batch#writeSync()
 
 ## Benchmark
 
@@ -60,14 +56,9 @@ $ node bench/bench.js
 
   benchmarking with 120,000 records, 24 chars each
 
-          put :  137,457 w/s in    873ms
-      putSync :  376,175 w/s in    319ms
-
-        batch :  634,920 w/s in    189ms
-    batchSync :  674,157 w/s in    178ms
-
-          get :   61,255 r/s in  1,959ms
-      getSync :  582,524 r/s in    206ms
+          put :  122,699 w/s in    978ms
+        batch :  628,272 w/s in    191ms
+          get :   58,968 r/s in  2,035ms
 
 ```
 
@@ -79,9 +70,6 @@ $ node bench/bench.js
 * evaluate msgpack
 * implement iterators
   * check less verbose iterator patterns
-* develop middleware api
-  * check connect middleware api
-  * check other middleware implementations
 
 ```javascript
 // use queue.js for put operations

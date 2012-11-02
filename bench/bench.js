@@ -8,28 +8,6 @@ var leveled = new Leveled("/tmp/foo");
 var count = 120000;
 var val = '1337,1337,1337,1337,1337';
 
-function putSync () {
-  var start = Date.now();
-
-  for (var i = 0; i < count; i++) {
-    leveled.putSync(i, val);
-  }
-
-  var duration = Date.now()-start;
-  log(true, count, 'put', duration, count);
-}
-
-function getSync () {
-  start = Date.now();
-
-  for (var i = 0; i < count; i++) {
-    assert(leveled.getSync(i) == val);
-  }
-
-  duration = Date.now()-start;
-  log(true, count, 'get', duration, count);
-}
-
 function putAsync(cb) {
   start = Date.now();
 
@@ -63,21 +41,6 @@ function getAsync (cb) {
   }
 }
 
-function batchSync () {
-  var start = Date.now();
-
-  var batch = leveled.batch();
-
-  for (var i = 0; i < count; i++) {
-    batch.put(i, val);
-  }
-
-  batch.writeSync();
-
-  var duration = Date.now()-start;
-  log(true, count, 'batch', duration, count);
-}
-
 function batchAsync(cb) {
   start = Date.now();
 
@@ -101,11 +64,8 @@ function batchAsync(cb) {
 console.log('\n  benchmarking with ' + humanize(count) + ' records, ' + val.length + ' chars each\n');
 
 putAsync(function () {
-  putSync()
   batchAsync(function () {
-    batchSync()
     getAsync(function () {
-      getSync()
       console.log()
     })
   })
@@ -115,10 +75,7 @@ putAsync(function () {
  * Utility functions
  */
 
-var last;
 function log(sync, num, op, dur, count) {
-  if (last && last != op) console.log();
-  last = op;
   console.log([
     pad(op + (sync? 'Sync' : ''), 13),
     ':',

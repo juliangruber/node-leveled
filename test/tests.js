@@ -96,8 +96,10 @@ describe('leveled', function() {
           val.should.equal('bar'); 
           leveled.del('foo', function (err) {
             should.not.exist(err)
-            leveled.getSync.bind(leveled, 'foo').should.throw()
-            done()
+            leveled.get('foo', function (err, val) {
+              err.should.be.ok
+              done()
+            })
           }) 
         })
       })
@@ -113,11 +115,13 @@ describe('Batch', function() {
   describe('.put', function() {
     it('should work', function(done) {
       batch.put('foo', 'bar123')
-      batch.writeSync()
-      leveled.get('foo', function (err, val) {
+      batch.write(function (err) {
         if (err) throw err
-        val.should.equal('bar123')
-        done()
+        leveled.get('foo', function (err, val) {
+          if (err) throw err
+          val.should.equal('bar123')
+          done()
+        })
       })
     })
     it('should take only string values', function() {
@@ -127,8 +131,12 @@ describe('Batch', function() {
   describe('.del', function() {
     it('should work', function() {
       batch.del('foo')
-      batch.writeSync()
-      leveled.getSync.bind(leveled, 'foo').should.throw()
+      batch.write(function (err) {
+        if (err) throw err
+        leveled.get('foo', function (err, val) {
+          err.should.be.ok
+        })
+      })
     })
   })
   describe('.write', function() {
@@ -181,11 +189,11 @@ describe('middleware', function() {
 
   it('should transform res', function(done) {
     leveled.use(function (req, res, next) {
-      var write = res.write
+      var end = res.end
 
       if (req.method == 'put') req.val = compress(req.val)
-      if (req.method == 'get') res.write = function (err, data) {
-        write(null, decompress(data))
+      if (req.method == 'get') res.end = function (err, data) {
+        end(null, decompress(data))
       }
       next()
     })
@@ -195,7 +203,6 @@ describe('middleware', function() {
     }
 
     function decompress(data) {
-      console.log('data', data)
       return data.split('compressed')[1];
     }
 
@@ -203,7 +210,7 @@ describe('middleware', function() {
       if (err) throw err
       leveled.get('fab', function (err, val) {
         if (err) throw err
-        val.should.equal('fob')
+        val.should.equal('FOB')
         done()
       })
     })
