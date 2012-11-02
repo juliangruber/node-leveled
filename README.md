@@ -10,7 +10,7 @@ added.
 ```javascript
 var db = require('leveled')('/tmp/mydb');
 
-db.putSync('foo', 'bar')
+db.put('foo', 'bar')
 
 db.get('some', function (err, val) {
   val == 'value';
@@ -90,12 +90,12 @@ leveled.use(function (req, res, next) {
 ```javascript
 // compress data
 leveled.use(function (req, res, next) {
-  var write = res.write;
+  var end = res.end;
 
   if (req.method == 'put') req.val = compress(req.val)
   if (req.method == 'get') {
-    res.write = function (data) {
-      write(decompress(data))
+    res.end = function (data) {
+      end(decompress(data))
     }
   }
   next()
