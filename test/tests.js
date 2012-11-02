@@ -129,12 +129,13 @@ describe('Batch', function() {
     })
   })
   describe('.del', function() {
-    it('should work', function() {
+    it('should work', function(done) {
       batch.del('foo')
       batch.write(function (err) {
         if (err) throw err
         leveled.get('foo', function (err, val) {
-          err.should.be.ok
+          should.exist(err)
+          done()
         })
       })
     })
@@ -157,6 +158,9 @@ describe('Batch', function() {
 })
 
 describe('middleware', function() {
+  it('should export them', function() {
+    should.exist(leveled.queue)
+  })
   it('should add', function(done) {
     leveled.use(function (req, res, next) {
       next()

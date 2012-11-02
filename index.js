@@ -1,4 +1,5 @@
 var binding = require('./build/Release/leveled');
+var fs = require('fs');
 
 module.exports = Leveled;
 
@@ -58,9 +59,6 @@ Leveled.prototype.handle = function (method) {
 Leveled.prototype.batch = function () {
   var db = this.db
   var batch = new binding.Batch()
-  batch.writeSync = function () {
-    return db.writeSync(batch)
-  }
   batch.write = function (cb) {
     return db.write(batch, cb)
   }
@@ -74,3 +72,12 @@ Leveled.prototype.use = function (middleware) {
 Leveled.prototype.clear = function () {
   this.middlewares = []
 }
+
+/*
+ * Export middlewares
+ */
+
+fs.readdirSync(__dirname + '/lib/middleware').forEach(function (file) {
+  if (!/\.js$/.test(file)) return
+  Leveled.prototype[file.split('.js')[0]] = require('./lib/middleware/' + file);
+})
