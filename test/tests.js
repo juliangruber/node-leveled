@@ -14,27 +14,6 @@ describe('leveled', function() {
       Leveled.bind(this, '/a/b/c/d/e').should.throw()
     })
   })
-/*  describe('.putSync(key, value)', function() {
-    it('should require key and value', function() {
-      leveled.putSync.bind(leveled).should.throw()
-      leveled.putSync.bind(leveled, 'key').should.throw()
-    })
-    it('should store a value', function() {
-      leveled.putSync("key", "value")
-      leveled.getSync("key").should.equal("value")
-    })
-    it('should support integer keys', function() {
-      leveled.putSync(1, "one")
-      leveled.getSync(1).should.equal("one")
-    })
-    it('should store only strings', function() {
-      leveled.putSync.bind(leveled, 1, 1).should.throw()
-      leveled.putSync.bind(leveled, 1, {}).should.throw()
-    })
-    it('should require key argument', function() {
-      leveled.putSync.bind(leveled).should.throw()
-    })
-  })*/
   describe('.put(key, value[, cb])', function() {
     it('should store a value', function(done) {
       leveled.put('key', 'value', function (err) {
@@ -46,6 +25,19 @@ describe('leveled', function() {
         })
       })
     })
+    it('should support integer keys', function(done) {
+      leveled.put(1, "one", function (err) {
+        if (err) throw err
+        leveled.get(1, function (err, val) {
+          val.should.equal('one')
+          done()
+        })
+      })
+    })
+    it('should store only strings', function() {
+      leveled.put.bind(leveled, 1, 1).should.throw()
+      leveled.put.bind(leveled, 1, {}).should.throw()
+    })
     it('should require key and value', function() {
       leveled.put.bind(leveled).should.throw()
       leveled.put.bind(leveled, 'key').should.throw()
@@ -53,10 +45,10 @@ describe('leveled', function() {
     })
   })
   describe('.get(key, val)', function() {
-    /*it('should require both arguments', function() {
+    it('should require both arguments', function() {
       leveled.get.bind(leveled).should.throw()
       leveled.get.bind(leveled, 'key').should.throw()
-    })*/
+    })
     it('should get a value', function(done) {
       leveled.put('key', 'value', function (err) {
         if (err) throw err;
@@ -68,25 +60,11 @@ describe('leveled', function() {
       })
     })
   })
-/*  describe('.getSync(key)', function() {
-    it('should require key argument', function() {
-      leveled.getSync.bind(leveled).should.throw()
-    })
-  })*/
   describe('.batch()', function() {
     it('should create one', function() {
       should.exist(leveled.batch())
     })
   })
-/*  describe('.delSync(key)', function() {
-    it('should delete', function() {
-      leveled.putSync('foo', 'bar')
-      leveled.getSync('foo').should.equal('bar')
-      leveled.getSync('foo').should.equal('bar')
-      leveled.delSync('foo')
-      leveled.getSync.bind(leveled, 'foo').should.throw()
-    })
-  })*/
   describe('.del(key)', function() {
     it('should delete', function(done) {
       leveled.put('foo', 'bar', function (err) {

@@ -6,11 +6,11 @@ var leveled = new Leveled("/tmp/foo");
 
 // bench -----------------------------------
 
-var count = 1200000;
+var count = 120000;
 var val = '1337,1337,1337,1337,1337';
 
 function put(cb) {
-  start = Date.now();
+  var start = Date.now();
 
   var written = 0;
   for (var i = 0; i < count; i++) {
@@ -28,7 +28,7 @@ function put(cb) {
 function putQueue(cb) {
   leveled.use(leveled.queue(leveled))
 
-  start = Date.now();
+  var start = Date.now();
 
   var written = 0;
   for (var i = 0; i < count; i++) {

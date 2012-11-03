@@ -33,9 +33,7 @@ Leveled.prototype.handle = function (method) {
       method : method
     }
 
-    var res = {
-      end : cb
-    }
+    var res = { end : cb }
 
     function next() {
       var layer = stack[index++]
@@ -67,10 +65,6 @@ Leveled.prototype.batch = function () {
 
 Leveled.prototype.use = function (middleware) {
   this.middlewares.push(middleware)
-}
-
-Leveled.prototype.clear = function () {
-  this.middlewares = []
 }
 
 /*
