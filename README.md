@@ -52,6 +52,14 @@ $ npm install leveled
 ### batch#write(cb)
 ### batch#writeSync()
 
+### leveled#iterator()
+
+### iterator#seekFirst(cb)
+### iterator#seekToLast(cb)
+### iterator#seek(target)
+### iterator#next()
+### iterator#prev()
+
 ## Benchmark
 
 Dunno yet why `leveled#get(key, cb)` is so slow...
