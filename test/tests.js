@@ -133,3 +133,24 @@ describe('Batch', function() {
     })
   })
 })
+
+describe('iterator', function() {
+  it('should get all', function(done) {
+    leveled.find('*', function (err, res) {
+      should.not.exist(err)
+      Object.keys(res).should.have.length(4)
+      done()
+    })
+  })
+  it('should find one', function(done) {
+    leveled.find('bar', function (err, res) {
+      should.not.exist(err)
+      Object.keys(res).should.have.length(1)
+      leveled.find('ba*', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(1)
+        done()
+      })
+    })
+  })
+})

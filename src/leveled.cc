@@ -22,6 +22,7 @@ void Leveled::Initialize(Handle<Object> target) {
 
   SetPrototypeMethod(constructor, "get", Get);
   SetPrototypeMethod(constructor, "getSync", GetSync);
+  SetPrototypeMethod(constructor, "find", Find);
   SetPrototypeMethod(constructor, "put", Put);
   SetPrototypeMethod(constructor, "putSync", PutSync);
   SetPrototypeMethod(constructor, "write", Write);
@@ -135,6 +136,93 @@ void Leveled::GetAfter (uv_work_t *req) {
   params->cb.Dispose();
   delete params;
   delete req;
+  scope.Close(Undefined());
+}
+
+/**
+ * Find
+ *
+ * @param {string} glob
+ * @param {function} cb
+ * @returns {object} Leveled
+ */
+
+Handle<Value> Leveled::Find(const Arguments& args) {
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
+
+  if (args.Length() < 2 || !args[1]->IsFunction()) {
+    ThrowException(Exception::Error(String::New("glob and cb required")));
+    return scope.Close(Undefined());
+  }
+
+  uv_work_t *req = new uv_work_t;
+  FindParams *params = new FindParams;
+  params->self = self;
+  params->cb = Persistent<Function>::New(Local<Function>::Cast(args[1]));
+  String::Utf8Value glob(args[0]->ToString());
+  params->glob = std::string(*glob);
+  req->data = params;
+
+  uv_queue_work(uv_default_loop(), req, FindDoing, FindAfter);
+
+  return scope.Close(args.Holder());
+}
+
+void Leveled::FindDoing (uv_work_t *req) {
+  FindParams *params = (FindParams *)req->data;
+
+  leveldb::Iterator* it = params->self->db->NewIterator(leveldb::ReadOptions());
+
+  const char last = params->glob[params->glob.length() - 1];
+  char next;
+  if (last == '*') {
+    next = '{';
+  } else {
+    next = last + 1;
+  }
+
+  std::string end = params->glob.substr(0, params->glob.length() - 1) + next;
+
+  for (it->Seek(params->glob); it->Valid() && it->key().ToString() < end; it->Next()) {
+    params->rtn[it->key().ToString()] = it->value().ToString();
+  }
+  params->status = it->status();
+  delete it;
+}
+
+void Leveled::FindAfter (uv_work_t *req) {
+  HandleScope scope;
+  FindParams *params = (FindParams *)req->data;
+
+  Handle<Value> argv[2];
+
+  if (params->status.ok()) {
+    argv[0] = Local<Value>::New(Undefined());
+  } else {
+    argv[0] = Local<Value>::New(String::New(params->status.ToString().data()));
+  }
+
+  Local<Object> rtn = Object::New();
+  std::map<std::string, std::string> map(params->rtn);
+  std::map<std::string, std::string>::iterator it;
+  for (it = map.begin(); it != map.end(); it++) {
+    rtn->Set(
+      String::New(it->first.data()),
+      String::New(it->second.data())
+    );
+  }
+  argv[1] = rtn;
+
+  TryCatch try_catch;
+  params->cb->Call(Context::GetCurrent()->Global(), 2, argv);
+  if (try_catch.HasCaught()) FatalException(try_catch);
+
+  params->cb.Dispose();
+  delete params;
+  delete req;
+
+  scope.Close(Undefined());
 }
 
 /**
@@ -243,6 +331,7 @@ void Leveled::PutAfter (uv_work_t *req) {
   params->cb.Dispose();
   delete params;
   delete req;
+  scope.Close(Undefined());
 }
 
 /**
@@ -334,6 +423,7 @@ void Leveled::WriteAfter (uv_work_t *req) {
 
   params->cb.Dispose();
   delete params;
+  scope.Close(Undefined());
 }
 
 /**
@@ -422,6 +512,7 @@ void Leveled::DelAfter (uv_work_t *req) {
   params->cb.Dispose();
   delete params;
   delete req;
+  scope.Close(Undefined());
 }
 
 /**

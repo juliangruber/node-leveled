@@ -4,6 +4,7 @@
 #include <node.h>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
+#include <map>
 #include "batch.h"
 
 using namespace v8;
@@ -27,6 +28,10 @@ private:
   static void GetDoing(uv_work_t *req);
   static void GetAfter(uv_work_t *req);
 
+  static Handle<Value> Find(const Arguments &args);
+  static void FindDoing(uv_work_t *req);
+  static void FindAfter(uv_work_t *req);
+
   static Handle<Value> PutSync(const Arguments &args);
   static Handle<Value> Put(const Arguments &args);
   static void PutDoing(uv_work_t *req);
@@ -49,6 +54,14 @@ struct GetParams {
   Persistent<Function> cb;
   leveldb::Status status;
   std::string rtn;
+};
+
+struct FindParams {
+  Leveled* self;
+  std::string glob; 
+  Persistent<Function> cb;
+  leveldb::Status status;
+  std::map<std::string, std::string> rtn;
 };
 
 struct PutParams {
