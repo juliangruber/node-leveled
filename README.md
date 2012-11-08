@@ -54,12 +54,54 @@ $ npm install leveled
 
 ### leveled#iterator()
 
+
 ### iterator#seekFirst(cb)
 ### iterator#seekToLast(cb)
 ### iterator#seek(target)
 ### iterator#next()
 ### iterator#prev()
 
+## Iterator API
+
+### Print all keys
+
+Native (slow)
+
+```js
+var keys = []
+
+var it = db.iterator()
+it.seekToFirst(function (err, key, val) {
+  if (err) return console.log(keys)
+  keys.push(key)
+  
+  (function next () {
+    it.next(function (err, key, val) {
+      if (err) return console.log(keys)
+      keys.push(key)
+      next()
+    })
+  })()
+})
+```
+
+With buffering (booh)
+
+```js
+db.find('*', function (err, res) {
+  res.forEach(function (entry) {
+    console.log(entry.key)  
+  })
+})
+```
+
+Without buffering (nice)
+
+```js
+db.find('*').on('data', function (key, val) {
+  console.log(key)  
+})
+```
 ## Benchmark
 
 Dunno yet why `leveled#get(key, cb)` is so slow...
