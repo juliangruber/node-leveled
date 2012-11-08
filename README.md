@@ -35,16 +35,39 @@ $ npm install leveled
 
 ### leveled(path)
 
+Instantiates a new DB at `path`, creating `path` if necessary.
+
 ### leveled#put(key, val[, cb])
 ### leveled#putSync(key, val)
+
+Store `val` at `key`.
 
 ### leveled#get(key, cb)
 ### leveled#getSync(key)
 
+Get the value stored at `key`.
+
 ### leveled#del(key[, cb])
 ### leveled#delSync(key)
 
+Delete the value stored at `key`.
+
+### leveled#find(glob, cb)
+
+Find values. At the moment glob-style matching is not fully implemented, what works is
+
+* `abc*`
+* `*`
+
+```js
+leveled.find('ab*', function (err, res) {
+  console.log(res) // { 'aba' : 'foo', 'abzzz' : 'bar' }
+})
+```
+
 ### leveled#batch()
+
+Creates a new `batch` that queues up operations until its `write` method is invoked.
 
 ### batch#put(key, val)
 ### batch#del(key)
@@ -52,75 +75,31 @@ $ npm install leveled
 ### batch#write(cb)
 ### batch#writeSync()
 
-### leveled#iterator()
+Apply the batch's operations to the DB.
 
-
-### iterator#seekFirst(cb)
-### iterator#seekToLast(cb)
-### iterator#seek(target)
-### iterator#next()
-### iterator#prev()
-
-## Iterator API
-
-### Print all keys
-
-Native (slow)
-
-```js
-var keys = []
-
-var it = db.iterator()
-it.seekToFirst(function (err, key, val) {
-  if (err) return console.log(keys)
-  keys.push(key)
-  
-  (function next () {
-    it.next(function (err, key, val) {
-      if (err) return console.log(keys)
-      keys.push(key)
-      next()
-    })
-  })()
-})
-```
-
-With buffering (booh)
-
-```js
-db.find('*', function (err, res) {
-  res.forEach(function (entry) {
-    console.log(entry.key)  
-  })
-})
-```
-
-Without buffering (nice)
-
-```js
-db.find('*').on('data', function (key, val) {
-  console.log(key)  
-})
-```
 ## Benchmark
 
-Dunno yet why `leveled#get(key, cb)` is so slow...
+On my mb pro:
 
 ```bash
 $ node bench/bench.js
 
   benchmarking with 120,000 records, 24 chars each
 
-          put :  137,457 w/s in    873ms
-      putSync :  376,175 w/s in    319ms
+          put :   128,479 w/s in    934ms
+      putSync :   372,670 w/s in    322ms
 
-        batch :  634,920 w/s in    189ms
-    batchSync :  674,157 w/s in    178ms
+        batch :   612,244 w/s in    196ms
+    batchSync :   641,711 w/s in    187ms
 
-          get :   61,255 r/s in  1,959ms
-      getSync :  582,524 r/s in    206ms
+          get :    58,881 r/s in  2,038ms
+      getSync :   560,747 r/s in    214ms
+
+     iterator :   220,588 r/s in    544ms
 
 ```
+
+`put` oparations don't force a sync to disk, hence the `get` looking so slow. Iterators are faster for common tasks where you need to get many values anyways.
 
 ## TODO
 

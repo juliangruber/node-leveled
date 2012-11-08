@@ -16,7 +16,7 @@ function putSync () {
   }
 
   var duration = Date.now()-start;
-  log(true, count, 'put', duration, count);
+  log(true, count, 'put', duration);
 }
 
 function getSync () {
@@ -27,7 +27,7 @@ function getSync () {
   }
 
   duration = Date.now()-start;
-  log(true, count, 'get', duration, count);
+  log(true, count, 'get', duration);
 }
 
 function putAsync(cb) {
@@ -39,7 +39,7 @@ function putAsync(cb) {
       if (err) throw err;
       if (++written == count) {
         duration = Date.now()-start;
-        log(false, count, 'put', duration, count);
+        log(false, count, 'put', duration);
         if (cb) cb();
       }
     })
@@ -56,7 +56,7 @@ function getAsync (cb) {
       assert(value == val);
       if (++received == count) {
         duration = Date.now()-start;
-        log(false, count, 'get', duration, count);
+        log(false, count, 'get', duration);
         if (cb) cb()
       }
     })
@@ -75,11 +75,11 @@ function batchSync () {
   batch.writeSync();
 
   var duration = Date.now()-start;
-  log(true, count, 'batch', duration, count);
+  log(true, count, 'batch', duration);
 }
 
 function batchAsync(cb) {
-  start = Date.now();
+  var start = Date.now();
 
   var batch = leveled.batch();
   for (var i = 0; i < count; i++) {
@@ -88,10 +88,21 @@ function batchAsync(cb) {
 
   batch.write(function (err) {
     if (err) throw err;
-    duration = Date.now()-start;
-    log(false, count, 'batch', duration, count);
+    var duration = Date.now() - start;
+    log(false, count, 'batch', duration);
     if (cb) cb();
   });
+}
+
+function iterator(cb) {
+  var start = Date.now();
+
+  leveled.find('*', function (err, res) {
+    if (err) throw err;
+    var duration = Date.now() - start;
+    log(false, count, 'iterator', duration);
+    if (cb) cb();
+  })
 }
 
 /*
@@ -106,7 +117,9 @@ putAsync(function () {
     batchSync()
     getAsync(function () {
       getSync()
-      console.log()
+      iterator(function () {
+        console.log()
+      })
     })
   })
 })
@@ -116,14 +129,14 @@ putAsync(function () {
  */
 
 var last;
-function log(sync, num, op, dur, count) {
+function log(sync, num, op, dur) {
   if (last && last != op) console.log();
   last = op;
   console.log([
     pad(op + (sync? 'Sync' : ''), 13),
     ':',
-    pad(humanize(Math.floor(1000/dur * num)), 8),
-    {'batch' : 'w', 'put' : 'w', 'get' : 'r'}[op] + '/s',
+    pad(humanize(Math.floor(1000/dur * num)), 9),
+    {'batch' : 'w', 'put' : 'w', 'get' : 'r', 'iterator' : 'r'}[op] + '/s',
     'in ' + pad(humanize(dur), 6) + 'ms'
    ].join(' '));
 }
