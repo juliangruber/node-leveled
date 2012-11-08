@@ -1,4 +1,3 @@
-
 # node-leveled
 
 A js-style LevelDB binding for node.
@@ -58,16 +57,24 @@ Delete the value stored at `key`.
 
 ### leveled#find(glob, cb)
 
-Find values. At the moment glob-style matching is not fully implemented, what works is
-
-* `abc*`
-* `*`
+Find values.
 
 ```js
 leveled.find('ab*', function (err, res) {
   console.log(res) // { 'aba' : 'foo', 'abzzz' : 'bar' }
 })
 ```
+
+At the moment glob-style matching is not fully implemented, what works is
+
+* `abc*`
+* `*`
+
+In the future it will work like redis's `KEYS` command:
+
+* `ab?` matches `abc`, not `abcc`
+* `ab[1-3]` matches `ab1`, `ab2`, `ab3`
+* `ab[1-3]*` etc.
 
 ### leveled#batch()
 
