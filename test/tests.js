@@ -1,6 +1,11 @@
 var should = require('should')
 var Leveled = require('../')
 var binding = require('../build/Release/leveled')
+var removeSync = require('remove').removeSync
+
+try { removeSync('/tmp/foo')  } catch (e) {}
+try { removeSync('/tmp/foo1') } catch (e) {}
+try { removeSync('/tmp/foo2') } catch (e) {}
 
 var leveled = new Leveled('/tmp/foo')
 
@@ -135,18 +140,62 @@ describe('Batch', function() {
 })
 
 describe('iterator', function() {
-  it('should get all', function(done) {
-    leveled.find('*', function (err, res) {
-      should.not.exist(err)
-      Object.keys(res).should.have.length(4)
-      done()
+  describe('.find(glob, cb)', function() {
+    it('should get all', function(done) {
+      leveled.find('*', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(4)
+        done()
+      })
+    })
+    it('should find one', function(done) {
+      leveled.find('bar', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(1)
+        leveled.find('ba*', function (err, res) {
+          should.not.exist(err)
+          Object.keys(res).should.have.length(1)
+          done()
+        })
+      })
     })
   })
-  it('should find one', function(done) {
-    leveled.find('bar', function (err, res) {
-      should.not.exist(err)
-      Object.keys(res).should.have.length(1)
-      leveled.find('ba*', function (err, res) {
+  describe('.range(from, to, cb)', function() {
+    before(function() {
+      leveled.putSync('10', 'foo')
+      leveled.putSync('20', 'foo')
+      leveled.putSync('30', 'foo')
+    })
+    it('should get from, to', function(done) {
+      leveled.range('10', '30', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(3)
+        done()
+      })
+    })
+    it('should get [from, to]', function(done) {
+      leveled.range('[10', '30]', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(3)
+        done()
+      })
+    })
+    it('should get (from, to]', function(done) {
+      leveled.range('(10', '30]', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(2)
+        done()
+      })
+    })
+    it('should get [from, to)', function(done) {
+      leveled.range('[10', '30)', function (err, res) {
+        should.not.exist(err)
+        Object.keys(res).should.have.length(2)
+        done()
+      })
+    })
+    it('should get (from, to)', function(done) {
+      leveled.range('(10', '30)', function (err, res) {
         should.not.exist(err)
         Object.keys(res).should.have.length(1)
         done()

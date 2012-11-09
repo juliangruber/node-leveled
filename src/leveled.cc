@@ -23,6 +23,7 @@ void Leveled::Initialize(Handle<Object> target) {
   SetPrototypeMethod(constructor, "get", Get);
   SetPrototypeMethod(constructor, "getSync", GetSync);
   SetPrototypeMethod(constructor, "find", Find);
+  SetPrototypeMethod(constructor, "range", Range);
   SetPrototypeMethod(constructor, "put", Put);
   SetPrototypeMethod(constructor, "putSync", PutSync);
   SetPrototypeMethod(constructor, "write", Write);
@@ -225,6 +226,101 @@ void Leveled::FindAfter (uv_work_t *req) {
   scope.Close(Undefined());
 }
 
+/**
+ * Range
+ *
+ * @param {string} from
+ * @param {string} to
+ * @param {function} cb
+ * @returns {object} Leveled
+ */
+
+Handle<Value> Leveled::Range(const Arguments& args) {
+  HandleScope scope;
+  Leveled* self = ObjectWrap::Unwrap<Leveled>(args.Holder());
+
+  if (args.Length() < 3 || !args[2]->IsFunction()) {
+    ThrowException(Exception::Error(String::New("from, to and cb required")));
+    return scope.Close(Undefined());
+  }
+
+  uv_work_t *req = new uv_work_t;
+  RangeParams *params = new RangeParams;
+  params->self = self;
+  params->cb = Persistent<Function>::New(Local<Function>::Cast(args[2]));
+  String::Utf8Value from(args[0]->ToString());
+  params->from = std::string(*from);
+  String::Utf8Value to(args[1]->ToString());
+  params->to = std::string(*to);
+  req->data = params;
+
+  uv_queue_work(uv_default_loop(), req, RangeDoing, RangeAfter);
+
+  return scope.Close(args.Holder());
+}
+
+void Leveled::RangeDoing (uv_work_t *req) {
+  RangeParams *params = (RangeParams *)req->data;
+
+  leveldb::Iterator* it = params->self->db->NewIterator(leveldb::ReadOptions());
+
+  std::string from = params->from;
+  std::string to = params->to;
+  bool skipFirst = false;
+  bool skipLast = false;
+  int lastTo = to.length() - 1;
+
+  if (from[0] == '[' || from[0] == '(') from = from.substr(1, from.length() - 1);
+  if (to[lastTo] == ']' || to[lastTo] == ')') to = to.substr(0, to.length() - 1);
+  if (params->from[0] == '(') skipFirst = true;
+  if (params->to[lastTo] == ')') skipLast = true;
+
+  std::string key;
+
+  for (it->Seek(from); it->Valid() && it->key().ToString() <= to; it->Next()) {
+    key = it->key().ToString();
+    if (key == from && skipFirst) continue;
+    if (key == to && skipLast) continue;
+    params->rtn[key] = it->value().ToString();
+  }
+
+  params->status = it->status();
+  delete it;
+}
+
+void Leveled::RangeAfter (uv_work_t *req) {
+  HandleScope scope;
+  RangeParams *params = (RangeParams *)req->data;
+
+  Handle<Value> argv[2];
+
+  if (params->status.ok()) {
+    argv[0] = Local<Value>::New(Undefined());
+  } else {
+    argv[0] = Local<Value>::New(String::New(params->status.ToString().data()));
+  }
+
+  Local<Object> rtn = Object::New();
+  std::map<std::string, std::string> map(params->rtn);
+  std::map<std::string, std::string>::iterator it;
+  for (it = map.begin(); it != map.end(); it++) {
+    rtn->Set(
+      String::New(it->first.data()),
+      String::New(it->second.data())
+    );
+  }
+  argv[1] = rtn;
+
+  TryCatch try_catch;
+  params->cb->Call(Context::GetCurrent()->Global(), 2, argv);
+  if (try_catch.HasCaught()) FatalException(try_catch);
+
+  params->cb.Dispose();
+  delete params;
+  delete req;
+
+  scope.Close(Undefined());
+}
 /**
  * PutSync
  *

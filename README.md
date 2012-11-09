@@ -64,8 +64,21 @@ Find values. At the moment glob-style matching is not fully implemented, what wo
 * `*`
 
 ```js
-leveled.find('ab*', function (err, res) {
+db.find('ab*', function (err, res) {
   console.log(res) // { 'aba' : 'foo', 'abzzz' : 'bar' }
+})
+```
+
+### db#range(from, to, cb)
+
+Find all entries whose keys are in the give range.
+
+* `from` can be `from` / `[from` or `(from`
+* `to` can be `to` / `to]` or `to)`
+
+```js
+db.range('[1337', '2337)', function (err, res) {
+  console.log(res) // { 1337 : 'foo', ..., 2336 : 'foo' }  
 })
 ```
 

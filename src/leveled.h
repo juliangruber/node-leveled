@@ -32,6 +32,10 @@ private:
   static void FindDoing(uv_work_t *req);
   static void FindAfter(uv_work_t *req);
 
+  static Handle<Value> Range(const Arguments &args);
+  static void RangeDoing(uv_work_t *req);
+  static void RangeAfter(uv_work_t *req);
+
   static Handle<Value> PutSync(const Arguments &args);
   static Handle<Value> Put(const Arguments &args);
   static void PutDoing(uv_work_t *req);
@@ -59,6 +63,15 @@ struct GetParams {
 struct FindParams {
   Leveled* self;
   std::string glob; 
+  Persistent<Function> cb;
+  leveldb::Status status;
+  std::map<std::string, std::string> rtn;
+};
+
+struct RangeParams {
+  Leveled* self;
+  std::string from; 
+  std::string to; 
   Persistent<Function> cb;
   leveldb::Status status;
   std::map<std::string, std::string> rtn;
