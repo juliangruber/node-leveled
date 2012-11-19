@@ -9,8 +9,7 @@
   },
   'target_defaults': {
     'defines': [
-      'LEVELDB_PLATFORM_POSIX=1',
-      'OS_MACOSX=1'
+      'LEVELDB_PLATFORM_POSIX=1'
     ],
     'include_dirs': [
       '.',
