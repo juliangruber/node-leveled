@@ -1,6 +1,6 @@
 {
   "name" : "leveled",
-  "version" : "0.4.2",
+  "version" : "0.4.3",
   "devDependencies" : {
     "mocha" : "*",
     "should" : "*",
@@ -9,5 +9,8 @@
   },
   "scripts" : {
     "test" : "mocha"
+  },
+  "engines" : {
+    "node" : ">= 0.8"
   }
 }
