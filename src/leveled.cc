@@ -99,7 +99,7 @@ Handle<Value> Leveled::Get(const Arguments& args) {
   params->key = std::string(*key);
   req->data = params;
 
-  uv_queue_work(uv_default_loop(), req, GetDoing, GetAfter);
+  uv_queue_work(uv_default_loop(), req, GetDoing, (uv_after_work_cb)GetAfter);
 
   return scope.Close(args.Holder());
 }
@@ -165,7 +165,7 @@ Handle<Value> Leveled::Find(const Arguments& args) {
   params->glob = std::string(*glob);
   req->data = params;
 
-  uv_queue_work(uv_default_loop(), req, FindDoing, FindAfter);
+  uv_queue_work(uv_default_loop(), req, FindDoing, (uv_after_work_cb)FindAfter);
 
   return scope.Close(args.Holder());
 }
@@ -254,7 +254,7 @@ Handle<Value> Leveled::Range(const Arguments& args) {
   params->to = std::string(*to);
   req->data = params;
 
-  uv_queue_work(uv_default_loop(), req, RangeDoing, RangeAfter);
+  uv_queue_work(uv_default_loop(), req, RangeDoing, (uv_after_work_cb)RangeAfter);
 
   return scope.Close(args.Holder());
 }
@@ -389,7 +389,7 @@ Handle<Value> Leveled::Put(const Arguments& args) {
   
   req->data = params;
 
-  uv_queue_work(uv_default_loop(), req, PutDoing, PutAfter);
+  uv_queue_work(uv_default_loop(), req, PutDoing, (uv_after_work_cb)PutAfter);
 
   return scope.Close(args.Holder());
 }
@@ -485,7 +485,7 @@ Handle<Value> Leveled::Write(const Arguments& args) {
 
   params->batch = ObjectWrap::Unwrap<Batch>(args[0]->ToObject());
 
-  uv_queue_work(uv_default_loop(), &params->request, WriteDoing, WriteAfter);
+  uv_queue_work(uv_default_loop(), &params->request, WriteDoing, (uv_after_work_cb)WriteAfter);
 
   return scope.Close(args.Holder());
 }
@@ -573,7 +573,7 @@ Handle<Value> Leveled::Del(const Arguments& args) {
   params->key = std::string(*key);
   req->data = params;
 
-  uv_queue_work(uv_default_loop(), req, DelDoing, DelAfter);
+  uv_queue_work(uv_default_loop(), req, DelDoing, (uv_after_work_cb)DelAfter);
 
   return scope.Close(args.Holder());
 }
