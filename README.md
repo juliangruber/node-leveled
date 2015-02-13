@@ -2,6 +2,8 @@
 
 A js-style LevelDB binding for node.
 
+**_DEPRECATED - Use [level](https://github.com/Level/level)_**
+
 [![Build Status](https://travis-ci.org/juliangruber/node-leveled.png?branch=master)](https://travis-ci.org/juliangruber/node-leveled)
 
 The datatype is plain strings, support for buffers and other formats may be
