@@ -3,7 +3,7 @@
   "version" : "0.4.4",
   "devDependencies" : {
     "mocha" : "*",
-    "should" : "*",
+    "should" : "11.2.0",
     "humanize-number" : "*",
     "remove" : "~0.1.5"
   },
